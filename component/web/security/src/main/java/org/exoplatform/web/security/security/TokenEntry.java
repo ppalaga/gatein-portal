@@ -35,7 +35,7 @@ import org.gatein.wci.security.Credentials;
 public abstract class TokenEntry {
 
     @Name
-    public abstract String getId();
+    public abstract String getTokenSaltedHash();
 
     @Property(name = "username")
     public abstract String getUserName();
