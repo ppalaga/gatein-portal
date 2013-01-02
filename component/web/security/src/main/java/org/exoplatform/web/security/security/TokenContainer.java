@@ -18,15 +18,13 @@
  */
 package org.exoplatform.web.security.security;
 
-import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.chromattic.api.annotations.Create;
 import org.chromattic.api.annotations.OneToMany;
 import org.chromattic.api.annotations.PrimaryType;
 import org.exoplatform.web.security.GateInToken;
-import org.gatein.wci.security.Credentials;
 
 /**
  * @author <a href="mailto:julien.viet@exoplatform.com">Julien Viet</a>
@@ -36,78 +34,50 @@ import org.gatein.wci.security.Credentials;
 public abstract class TokenContainer {
 
     @Create
-    protected abstract TokenEntry createToken();
+    protected abstract UserTokenCollection createUserTokenCollection();
 
     @OneToMany
-    protected abstract Map<String, TokenEntry> getTokens();
+    protected abstract Map<String, UserTokenCollection> getUserTokenCollections();
 
-    public Collection<TokenEntry> getAllTokens() {
-        return getTokens().values();
-    }
-
-    public GateInToken getToken(String tokenId) {
-        Map<String, TokenEntry> tokens = getTokens();
-        TokenEntry entry = tokens.get(tokenId);
-        return entry != null ? entry.getToken() : null;
-    }
-
-    public GateInToken removeToken(String tokenId) {
-        Map<String, TokenEntry> tokens = getTokens();
-        TokenEntry entry = tokens.get(tokenId);
-        if (entry != null) {
-            GateInToken token = entry.getToken();
-            entry.remove();
-            return token;
-        } else {
-            return null;
+    public void cleanExpiredTokens() {
+        Map<String, UserTokenCollection> users = getUserTokenCollections();
+        for (UserTokenCollection userTokens : users.values()) {
+            if (userTokens != null) {
+                Map<String, TokenEntry> tokens = userTokens.getTokens();
+                if (tokens != null) {
+                    for (TokenEntry en : tokens.values()) {
+                        GateInToken token = en.getToken();
+                        if (token.isExpired()) {
+                            en.remove();
+                        }
+                    }
+                }
+            }
         }
     }
 
-    /**
-     * @deprecated method encodeAndSaveToken should be used instead
-     */
-    public GateInToken saveToken(String tokenId, Credentials credentials, Date expirationTime) {
-        // TODO: Is this method really needed? We should remove it in the future...
-        Map<String, TokenEntry> tokens = getTokens();
-        TokenEntry entry = tokens.get(tokenId);
-        if (entry == null) {
-            entry = createToken();
-            tokens.put(tokenId, entry);
-            entry.setUserName(credentials.getUsername());
-            entry.setPassword(credentials.getPassword());
+    public int countTokens() {
+        int result = 0;
+        Map<String, UserTokenCollection> users = getUserTokenCollections();
+        if (users != null) {
+            for (Entry<String, UserTokenCollection> user : users.entrySet()) {
+                UserTokenCollection userTokens = user.getValue();
+                if (userTokens != null) {
+                    result += userTokens.size();
+                }
+            }
         }
-        entry.setExpirationTime(expirationTime);
-        return entry.getToken();
+        return result;
     }
 
-    public GateInToken encodeAndSaveToken(String tokenId, Credentials credentials, Date expirationTime, AbstractCodec codec) throws TokenExistsException {
-        Map<String, TokenEntry> tokens = getTokens();
-        TokenEntry entry = tokens.get(tokenId);
-        if (entry == null) {
-            entry = createToken();
-            tokens.put(tokenId, entry);
-            entry.setUserName(credentials.getUsername());
-            entry.setPassword(codec.encode(credentials.getPassword()));
-        } else {
-            throw new TokenExistsException();
+    public UserTokenCollection getUserTokenCollection(String user, boolean createIfNecessary) {
+        Map<String, UserTokenCollection> users = getUserTokenCollections();
+        UserTokenCollection userCollection = users.get(user);
+        if (userCollection == null && createIfNecessary) {
+            userCollection = createUserTokenCollection();
+            users.put(user, userCollection);
         }
-        entry.setExpirationTime(expirationTime);
-        return entry.getToken();
-    }
-
-    public GateInToken getTokenAndDecode(String tokenId, AbstractCodec codec) {
-        Map<String, TokenEntry> tokens = getTokens();
-        TokenEntry entry = tokens.get(tokenId);
-        if (entry != null) {
-            GateInToken gateInToken = entry.getToken();
-            Credentials payload = gateInToken.getPayload();
-
-            // Return a cloned GateInToken
-            return new GateInToken(gateInToken.getExpirationTimeMillis(), new Credentials(payload.getUsername(),
-                    codec.decode(payload.getPassword())));
-
-        }
-        return null;
+        return userCollection;
     }
 
 }
