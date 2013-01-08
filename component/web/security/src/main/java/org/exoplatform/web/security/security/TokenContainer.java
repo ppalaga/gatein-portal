@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.chromattic.api.annotations.Create;
+import org.chromattic.api.annotations.Destroy;
 import org.chromattic.api.annotations.OneToMany;
 import org.chromattic.api.annotations.PrimaryType;
 import org.exoplatform.web.security.GateInToken;
@@ -78,6 +79,15 @@ public abstract class TokenContainer {
             users.put(user, userCollection);
         }
         return userCollection;
+    }
+
+    public void removeAll() {
+        Map<String, UserTokenCollection> users = getUserTokenCollections();
+        if (users != null) {
+            for (Entry<String, UserTokenCollection> user : users.entrySet()) {
+                user.getValue().remove();
+            }
+        }
     }
 
 }
