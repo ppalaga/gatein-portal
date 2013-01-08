@@ -284,6 +284,25 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
         return null;
     }
 
+    public void deleteAll() {
+        /**
+         * @author <a href="mailto:ppalaga@redhat.com">Peter Palaga</a>
+         *
+         */
+        new TokenTask<Void>() {
+
+            /* (non-Javadoc)
+             * @see org.exoplatform.commons.chromattic.ContextualTask#execute(org.exoplatform.commons.chromattic.SessionContext)
+             */
+            @Override
+            protected Void execute(SessionContext context) {
+                getTokenContainer().remove();
+                return null;
+            }
+
+        }.executeWith(chromatticLifeCycle);
+    }
+
     @Override
     public void cleanExpiredTokens() {
         new TokenTask<Void>() {
