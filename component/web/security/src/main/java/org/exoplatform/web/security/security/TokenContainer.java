@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.chromattic.api.annotations.Create;
+import org.chromattic.api.annotations.Destroy;
 import org.chromattic.api.annotations.OneToMany;
 import org.chromattic.api.annotations.PrimaryType;
 import org.exoplatform.web.security.GateInToken;
@@ -79,5 +80,8 @@ public abstract class TokenContainer {
         }
         return userCollection;
     }
+
+    @Destroy
+    public abstract void remove();
 
 }
