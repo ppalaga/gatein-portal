@@ -30,13 +30,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import org.chromattic.api.ChromatticSession;
+import org.chromattic.api.query.QueryResult;
 import org.exoplatform.commons.chromattic.ChromatticLifeCycle;
 import org.exoplatform.commons.chromattic.ChromatticManager;
 import org.exoplatform.commons.chromattic.ContextualTask;
@@ -44,6 +44,7 @@ import org.exoplatform.commons.chromattic.SessionContext;
 import org.exoplatform.commons.utils.PropertyManager;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
+import org.exoplatform.portal.pom.config.Utils;
 import org.exoplatform.web.security.GateInToken;
 import org.exoplatform.web.security.codec.AbstractCodec;
 import org.exoplatform.web.security.codec.AbstractCodecBuilder;
@@ -218,6 +219,31 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
         }
     }
 
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.exoplatform.web.security.security.AbstractTokenService#start()
+     */
+    @Override
+    public void start() {
+        /* clean the legacy tokens */
+        new TokenTask<Void>() {
+            @Override
+            protected Void execute(SessionContext context) {
+                SessionContext ctx = chromatticLifeCycle.getContext();
+                ChromatticSession session = ctx.getSession();
+                TokenContainer container = session.findByPath(TokenContainer.class, lifecycleName);
+                if (container != null) {
+                    /* if the container does not exist, it makes no sense to clean the legacy tokens */
+                    container.cleanLegacyTokens();
+                }
+                return null;
+            }
+
+        }.executeWith(chromatticLifeCycle);
+        super.start();
+    }
+
     public String createToken(final Credentials credentials) {
         if (validityMillis < 0) {
             throw new IllegalArgumentException();
@@ -242,9 +268,8 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
                     String encryptedPassword = codec.encode(credentials.getPassword());
                     Credentials encodedCredentials = new Credentials(credentials.getUsername(), encryptedPassword);
 
-                    UserTokenCollection userTokenCollection = tokenContainer.getUserTokenCollection(user, true);
                     try {
-                        userTokenCollection.saveToken(hashedRandomString, encodedCredentials, new Date(expirationTimeMillis));
+                        tokenContainer.saveToken(hashedRandomString, encodedCredentials, new Date(expirationTimeMillis));
                     } catch (TokenExistsException e) {
                         cookieTokenString = null;
                     }
@@ -284,19 +309,34 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
         return null;
     }
 
-    public void deleteAll() {
-        /**
-         * @author <a href="mailto:ppalaga@redhat.com">Peter Palaga</a>
-         *
-         */
+    /**
+     * The UI should offer a way to delete all existing tokens of the current user.
+     *
+     * @param user
+     */
+    public void deleteTokensOfUser(final String user) {
         new TokenTask<Void>() {
-
-            /* (non-Javadoc)
-             * @see org.exoplatform.commons.chromattic.ContextualTask#execute(org.exoplatform.commons.chromattic.SessionContext)
-             */
             @Override
             protected Void execute(SessionContext context) {
-                getTokenContainer().remove();
+                QueryResult<TokenEntry> result = findTokensOfUser(user);
+                while (result.hasNext()) {
+                    TokenEntry en = result.next();
+                    en.remove();
+                }
+                return null;
+            }
+
+        }.executeWith(chromatticLifeCycle);
+    }
+
+    /**
+     * Removes all tokens stored in the {@link TokenContainer}.
+     */
+    public void deleteAll() {
+        new TokenTask<Void>() {
+            @Override
+            protected Void execute(SessionContext context) {
+                getTokenContainer().removeAll();
                 return null;
             }
 
@@ -319,7 +359,7 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
         return new TokenTask<Long>() {
             @Override
             protected Long execute(SessionContext context) {
-                return (long) getTokenContainer().countTokens();
+                return (long) getTokenContainer().size();
             }
         }.executeWith(chromatticLifeCycle);
     }
@@ -359,6 +399,16 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
             return container;
         }
 
+        protected final QueryResult<TokenEntry> findTokensOfUser(String user) {
+            SessionContext ctx = chromatticLifeCycle.getContext();
+            ChromatticSession session = ctx.getSession();
+            TokenContainer tokenContainer = getTokenContainer();
+
+            String statement = new StringBuilder(128).append("jcr:path LIKE '").append(session.getPath(tokenContainer))
+                    .append("/%'").append(" AND username='").append(Utils.queryEscape(user)).append("'").toString();
+            return session.createQueryBuilder(TokenEntry.class).where(statement).get().objects();
+        }
+
     }
 
     private class RemovableGetTokenTask extends TokenTask<GateInToken> {
@@ -376,30 +426,27 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
 
         @Override
         protected GateInToken execute(SessionContext context) {
-            UserTokenCollection userCollection = getTokenContainer().getUserTokenCollection(token.getUser(), false);
-            if (userCollection != null) {
-                Map<String, TokenEntry> userTokenEntries = userCollection.getTokens();
-                if (userTokenEntries != null) {
-                    for (Entry<String, TokenEntry> hashTokenEntry : userTokenEntries.entrySet()) {
-                        try {
-                            if (saltedHashService.validate(token.getRandomString(), hashTokenEntry.getKey())) {
-                                TokenEntry tokenEntry = hashTokenEntry.getValue();
-                                GateInToken encryptedToken = tokenEntry.getToken();
-                                Credentials encryptedCredentials = encryptedToken.getPayload();
-                                Credentials decryptedCredentials = new Credentials(encryptedCredentials.getUsername(),
-                                        codec.decode(encryptedCredentials.getPassword()));
-                                if (remove) {
-                                    tokenEntry.remove();
-                                }
-                                return new GateInToken(encryptedToken.getExpirationTimeMillis(), decryptedCredentials);
-                            }
-                        } catch (SaltedHashException e) {
-                            log.warn("Could not validate cookie token against its salted hash.", e);
+            QueryResult<TokenEntry> result = findTokensOfUser(token.getUser());
+            while (result.hasNext()) {
+                TokenEntry en = result.next();
+                try {
+                    if (saltedHashService.validate(token.getRandomString(), en.getTokenSaltedHash())) {
+                        GateInToken encryptedToken = en.getToken();
+                        Credentials encryptedCredentials = encryptedToken.getPayload();
+                        Credentials decryptedCredentials = new Credentials(encryptedCredentials.getUsername(),
+
+                        codec.decode(encryptedCredentials.getPassword()));
+                        if (remove) {
+                            en.remove();
                         }
+                        return new GateInToken(encryptedToken.getExpirationTimeMillis(), decryptedCredentials);
                     }
+                } catch (SaltedHashException e) {
+                    log.warn("Could not validate cookie token against its salted hash.", e);
                 }
             }
             return null;
+
         }
     }
 }

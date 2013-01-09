@@ -65,33 +65,20 @@ public class TestSimpleGeneratorService extends AbstractKernelTest {
      */
     public void testDuplicatedTokenGeneration() throws Exception {
         String token1 = service.createToken(new Credentials("root1", "gtn1"));
-        assertEquals(token1, "root1.rememberme0");
+        assertEquals("root1.rememberme0", token1);
         assertEquals(service.getCounter(), 1);
 
         String token2 = service.createToken(new Credentials("root2", "gtn2"));
-        assertEquals(token2, "root2.rememberme1");
+        assertEquals("root2.rememberme1", token2);
         assertEquals(service.getCounter(), 2);
 
-        String token3 = service.createToken(new Credentials("root3", "gtn3"));
-        assertEquals(token3, "root3.rememberme1");
-        // Counter should be 4 now due to duplicated token generation
-        assertEquals(service.getCounter(), 3);
-
-
-        String token4 = service.createToken(new Credentials("root4", "gtn4"));
-        assertEquals(token4, "root4.rememberme2");
+        String token3 = service.createToken(new Credentials("-root3", "gtn3"));
+        assertEquals("-root3.rememberme2", token3);
         // Counter should be 4 now due to duplicated token generation
         assertEquals(service.getCounter(), 4);
 
-        String token5 = service.createToken(new Credentials("root4", "gtn4"));
-        assertEquals(token5, "root4.rememberme3");
-        // Counter should be 4 now due to duplicated token generation
-        assertEquals(service.getCounter(), 6);
-
-        assertEquals(service.getToken(token1).getPayload().getUsername(), "root1");
-        assertEquals(service.getToken(token2).getPayload().getUsername(), "root2");
-        assertEquals(service.getToken(token3).getPayload().getUsername(), "root3");
-        assertEquals(service.getToken(token4).getPayload().getUsername(), "root4");
-        assertEquals(service.getToken(token5).getPayload().getUsername(), "root4");
+        assertEquals("root1", service.getToken(token1).getPayload().getUsername());
+        assertEquals("root2", service.getToken(token2).getPayload().getUsername());
+        assertEquals("-root3", service.getToken(token3).getPayload().getUsername());
     }
 }
