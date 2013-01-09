@@ -43,12 +43,19 @@ import org.gatein.common.logging.LoggerFactory;
 public class JCASaltedHashService implements SaltedHashService {
 
     public static final String PBKDF2_WITH_HMAC_SHA1 = "PBKDF2WithHmacSHA1";
-    public static final int DEFAULT_SALT_BYTE_LENGTH = 36;
-    public static final int DEFAULT_HASH_BYTE_LENGTH = 36;
-    public static final int DEFAULT_ITERATION_COUNT = 10 * 1024;
+    public static final int DEFAULT_SALT_BYTE_LENGTH = 9;
+    public static final int DEFAULT_HASH_BYTE_LENGTH = 9;
+    public static final int DEFAULT_ITERATION_COUNT = 1000;
 
     /**
      * The number of iterations submitted to {@link SecretKeyFactory#generateSecret(java.security.spec.KeySpec)}.
+     * <p>
+     * From <a href="http://en.wikipedia.org/wiki/PBKDF2">http://en.wikipedia.org/wiki/PBKDF2</a> (retrieved 2013-01-08):
+     * <cite>When the
+     * standard was written in 2000, the recommended minimum number of iterations was 1000, but the parameter is intended to be
+     * increased over time as CPU speeds increase.
+     * [...] Apple's iOS 3 uses 2,000 iterations and iOS 4 uses 10,000.
+     * </cite>
      */
     private int iterationCount;
 
@@ -84,8 +91,7 @@ public class JCASaltedHashService implements SaltedHashService {
      * @param hashLength
      * @param codec
      */
-    public JCASaltedHashService(String algorithm, int iterationCount, int saltLength, int hashLength,
-            SaltedHashCodec codec) {
+    public JCASaltedHashService(String algorithm, int iterationCount, int saltLength, int hashLength, SaltedHashCodec codec) {
         super();
         this.algorithm = algorithm;
         this.iterationCount = iterationCount;
@@ -102,7 +108,9 @@ public class JCASaltedHashService implements SaltedHashService {
                 XmlSafeSaltedHashCodec.INSTANCE);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see org.exoplatform.web.security.hash.SaltedHashService#getSaltedHash(java.lang.String, java.security.SecureRandom)
      */
     @Override
@@ -120,7 +128,9 @@ public class JCASaltedHashService implements SaltedHashService {
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see org.exoplatform.web.security.hash.SaltedHashService#validate(java.lang.String, java.lang.String)
      */
     @Override

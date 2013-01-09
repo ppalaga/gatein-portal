@@ -27,21 +27,6 @@
       <supertype>mix:referenceable</supertype>
     </supertypes>
     <childNodeDefinitions>
-      <childNodeDefinition name="*" defaultPrimaryType="tkn:usertokencollection" autoCreated="false" mandatory="false"
-                           onParentVersion="COPY" protected="false" sameNameSiblings="false">
-        <requiredPrimaryTypes>
-          <requiredPrimaryType>tkn:usertokencollection</requiredPrimaryType>
-        </requiredPrimaryTypes>
-      </childNodeDefinition>
-    </childNodeDefinitions>
-  </nodeType>
-
-  <nodeType name="tkn:usertokencollection" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
-    <supertypes>
-      <supertype>nt:base</supertype>
-      <supertype>mix:referenceable</supertype>
-    </supertypes>
-    <childNodeDefinitions>
       <childNodeDefinition name="*" defaultPrimaryType="tkn:tokenentry" autoCreated="false" mandatory="false"
                            onParentVersion="COPY" protected="false" sameNameSiblings="false">
         <requiredPrimaryTypes>
