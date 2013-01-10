@@ -38,6 +38,7 @@ import org.exoplatform.web.security.security.CookieTokenService;
 public class SimpleGeneratorCookieTokenService extends CookieTokenService {
 
     private int counter = 0;
+    private int noRandom = 0;
 
     public SimpleGeneratorCookieTokenService(InitParams initParams, ChromatticManager chromatticManager)
             throws TokenServiceInitializationException {
@@ -60,6 +61,17 @@ public class SimpleGeneratorCookieTokenService extends CookieTokenService {
     protected String nextTokenId() {
         counter++;
         return "rememberme" + counter / 2;
+    }
+
+
+
+    /* (non-Javadoc)
+     * @see org.exoplatform.web.security.security.AbstractTokenService#nextRandom()
+     */
+    @Override
+    protected String nextRandom() {
+        noRandom++;
+        return "random"+ String.valueOf(noRandom/2);
     }
 
     int getCounter() {

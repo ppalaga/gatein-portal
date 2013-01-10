@@ -65,15 +65,15 @@ public class TestSimpleGeneratorService extends AbstractKernelTest {
      */
     public void testDuplicatedTokenGeneration() throws Exception {
         String token1 = service.createToken(new Credentials("root1", "gtn1"));
-        assertEquals("root1.rememberme0", token1);
+        assertEquals("random0.rememberme0", token1);
         assertEquals(service.getCounter(), 1);
 
         String token2 = service.createToken(new Credentials("root2", "gtn2"));
-        assertEquals("root2.rememberme1", token2);
+        assertEquals("random1.rememberme1", token2);
         assertEquals(service.getCounter(), 2);
 
         String token3 = service.createToken(new Credentials("-root3", "gtn3"));
-        assertEquals("-root3.rememberme2", token3);
+        assertEquals("random2.rememberme2", token3);
         // Counter should be 4 now due to duplicated token generation
         assertEquals(service.getCounter(), 4);
 

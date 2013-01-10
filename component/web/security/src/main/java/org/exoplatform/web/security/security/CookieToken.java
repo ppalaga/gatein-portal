@@ -30,7 +30,7 @@ package org.exoplatform.web.security.security;
  */
 public class CookieToken {
     private static final char DELIMITER = '.';
-    private final String user;
+    private final String id;
     private final String randomString;
 
     public CookieToken(String token) throws TokenParseException {
@@ -42,18 +42,18 @@ public class CookieToken {
         } else if (periodPos == token.length() - 1) {
             throw new TokenParseException("Delimiter '" + DELIMITER + "' found at position token.length() - 1 in cookie token.");
         } else {
-            this.user = token.substring(0, periodPos);
+            this.id = token.substring(0, periodPos);
             this.randomString = token.substring(periodPos + 1);
         }
     }
 
     /**
-     * @param user
+     * @param id
      * @param randomString
      */
-    public CookieToken(String user, String randomString) {
+    public CookieToken(String id, String randomString) {
         super();
-        if (user == null || user.length() == 0) {
+        if (id == null || id.length() == 0) {
             throw new IllegalArgumentException("user must be non-null and non-empty.");
         }
         if (randomString == null || randomString.length() == 0) {
@@ -62,7 +62,7 @@ public class CookieToken {
         if (randomString.indexOf(DELIMITER) >= 0) {
             throw new IllegalArgumentException("randomString must not contain '"+ DELIMITER +"'.");
         }
-        this.user = user;
+        this.id = id;
         this.randomString = randomString;
     }
 
@@ -73,7 +73,7 @@ public class CookieToken {
      */
     @Override
     public String toString() {
-        return user + DELIMITER + randomString;
+        return id + DELIMITER + randomString;
     }
 
     /*
@@ -86,7 +86,7 @@ public class CookieToken {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((randomString == null) ? 0 : randomString.hashCode());
-        result = prime * result + ((user == null) ? 0 : user.hashCode());
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
         return result;
     }
 
@@ -114,11 +114,11 @@ public class CookieToken {
         } else if (!randomString.equals(other.randomString)) {
             return false;
         }
-        if (user == null) {
-            if (other.user != null) {
+        if (id == null) {
+            if (other.id != null) {
                 return false;
             }
-        } else if (!user.equals(other.user)) {
+        } else if (!id.equals(other.id)) {
             return false;
         }
         return true;
@@ -127,8 +127,8 @@ public class CookieToken {
     /**
      * @return the user
      */
-    public String getUser() {
-        return user;
+    public String getId() {
+        return id;
     }
 
     /**

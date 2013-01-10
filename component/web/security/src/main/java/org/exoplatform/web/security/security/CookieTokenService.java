@@ -251,7 +251,6 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
         if (credentials == null) {
             throw new NullPointerException();
         }
-        final String user = credentials.getUsername();
         return new TokenTask<String>() {
             @Override
             protected String execute(SessionContext context) {
@@ -259,7 +258,8 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
                 TokenContainer tokenContainer = getTokenContainer();
                 while (cookieTokenString == null) {
                     String randomString = nextTokenId();
-                    cookieTokenString = new CookieToken(user, randomString).toString();
+                    String id = nextRandom();
+                    cookieTokenString = new CookieToken(id, randomString).toString();
 
                     String hashedRandomString = hashToken(randomString);
                     long expirationTimeMillis = System.currentTimeMillis() + validityMillis;
@@ -269,7 +269,7 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
                     Credentials encodedCredentials = new Credentials(credentials.getUsername(), encryptedPassword);
 
                     try {
-                        tokenContainer.saveToken(hashedRandomString, encodedCredentials, new Date(expirationTimeMillis));
+                        tokenContainer.saveToken(context.getSession(), id, hashedRandomString, encodedCredentials, new Date(expirationTimeMillis));
                     } catch (TokenExistsException e) {
                         cookieTokenString = null;
                     }
@@ -292,7 +292,7 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
             token = new CookieToken(cookieTokenString);
             return new RemovableGetTokenTask(token, false).executeWith(chromatticLifeCycle);
         } catch (TokenParseException e) {
-            log.warn("Could not parse cookie token.", e);
+            log.warn("Could not parse cookie token:"+ e.getMessage());
         }
         return null;
     }
@@ -304,7 +304,7 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
             token = new CookieToken(cookieTokenString);
             return new RemovableGetTokenTask(token, true).executeWith(chromatticLifeCycle);
         } catch (TokenParseException e) {
-            log.warn("Could not parse cookie token.", e);
+            log.warn("Could not parse cookie token:"+ e.getMessage());
         }
         return null;
     }
@@ -399,6 +399,12 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
             return container;
         }
 
+        protected final <A> A getMixin(Object o, Class<A> type) {
+            SessionContext ctx = chromatticLifeCycle.getContext();
+            ChromatticSession session = ctx.getSession();
+            return session.getEmbedded(o, type);
+        }
+
         protected final QueryResult<TokenEntry> findTokensOfUser(String user) {
             SessionContext ctx = chromatticLifeCycle.getContext();
             ChromatticSession session = ctx.getSession();
@@ -426,27 +432,28 @@ public class CookieTokenService extends AbstractTokenService<GateInToken, String
 
         @Override
         protected GateInToken execute(SessionContext context) {
-            QueryResult<TokenEntry> result = findTokensOfUser(token.getUser());
-            while (result.hasNext()) {
-                TokenEntry en = result.next();
-                try {
-                    if (saltedHashService.validate(token.getRandomString(), en.getTokenSaltedHash())) {
-                        GateInToken encryptedToken = en.getToken();
-                        Credentials encryptedCredentials = encryptedToken.getPayload();
-                        Credentials decryptedCredentials = new Credentials(encryptedCredentials.getUsername(),
+            TokenEntry en = getTokenContainer().getTokens().get(token.getId());
+            if (en != null) {
+                HashedToken hashedToken = getMixin(en, HashedToken.class);
+                if (hashedToken != null && hashedToken.getHashedToken() != null) {
+                    try {
+                        if (saltedHashService.validate(token.getRandomString(), hashedToken.getHashedToken())) {
+                            GateInToken encryptedToken = en.getToken();
+                            Credentials encryptedCredentials = encryptedToken.getPayload();
+                            Credentials decryptedCredentials = new Credentials(encryptedCredentials.getUsername(),
 
-                        codec.decode(encryptedCredentials.getPassword()));
-                        if (remove) {
-                            en.remove();
+                            codec.decode(encryptedCredentials.getPassword()));
+                            if (remove) {
+                                en.remove();
+                            }
+                            return new GateInToken(encryptedToken.getExpirationTimeMillis(), decryptedCredentials);
                         }
-                        return new GateInToken(encryptedToken.getExpirationTimeMillis(), decryptedCredentials);
+                    } catch (SaltedHashException e) {
+                        log.warn("Could not validate cookie token against its salted hash.", e);
                     }
-                } catch (SaltedHashException e) {
-                    log.warn("Could not validate cookie token against its salted hash.", e);
                 }
             }
             return null;
-
         }
     }
 }

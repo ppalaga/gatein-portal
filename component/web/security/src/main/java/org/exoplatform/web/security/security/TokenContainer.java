@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.chromattic.api.ChromatticSession;
 import org.chromattic.api.annotations.Create;
 import org.chromattic.api.annotations.OneToMany;
 import org.chromattic.api.annotations.PrimaryType;
@@ -60,16 +61,20 @@ public abstract class TokenContainer {
         }
     }
 
-    public void saveToken(String hashedToken, Credentials credentials, Date expirationTime) throws TokenExistsException {
+    public void saveToken(ChromatticSession session, String id, String hashedToken, Credentials credentials, Date expirationTime) throws TokenExistsException {
         Map<String, TokenEntry> tokens = getTokens();
-        if (tokens.containsKey(hashedToken)) {
+        if (tokens.containsKey(id)) {
             throw new TokenExistsException();
         }
         TokenEntry entry = createToken();
-        tokens.put(hashedToken, entry);
+        tokens.put(id, entry);
         entry.setUserName(credentials.getUsername());
         entry.setPassword(credentials.getPassword());
         entry.setExpirationTime(expirationTime);
+
+        HashedToken hashedTokenMixin = session.create(HashedToken.class);
+        session.setEmbedded(entry, HashedToken.class, hashedTokenMixin);
+        hashedTokenMixin.setHashedToken(hashedToken);
     }
 
     public void cleanExpiredTokens() {
