@@ -97,7 +97,7 @@ import org.json.JSONObject;
 public class UIPortalApplication extends UIApplication {
 
     /**
-     * Property settable in the portal'S configuration.properties file. See {@link EditMode} for possible values. See also
+     * Property settable in the portal's configuration.properties file. See {@link EditMode} for possible values. See also
      * {@link #getDefaultEditMode()}.
      */
     public static final String DEFAULT_MODE_PROPERTY = "gatein.portal.pageEditor.defaultEditMode";

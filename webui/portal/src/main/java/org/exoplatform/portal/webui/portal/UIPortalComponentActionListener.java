@@ -38,6 +38,7 @@ import org.exoplatform.portal.webui.login.UILogin;
 import org.exoplatform.portal.webui.login.UIResetPassword;
 import org.exoplatform.portal.webui.page.UIPage;
 import org.exoplatform.portal.webui.page.UIPageBody;
+import org.exoplatform.portal.webui.portal.UIPortalComposer.PlacementPolicy;
 import org.exoplatform.portal.webui.util.PortalDataMapper;
 import org.exoplatform.portal.webui.util.Util;
 import org.exoplatform.portal.webui.workspace.UIEditInlineWorkspace;
@@ -45,6 +46,8 @@ import org.exoplatform.portal.webui.workspace.UIMaskWorkspace;
 import org.exoplatform.portal.webui.workspace.UIPortalApplication;
 import org.exoplatform.portal.webui.workspace.UIPortalToolPanel;
 import org.exoplatform.portal.webui.workspace.UIWorkingWorkspace;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.web.application.ApplicationMessage;
@@ -168,6 +171,7 @@ public class UIPortalComponentActionListener {
     }
 
     public static class MoveChildActionListener extends EventListener<UIContainer> {
+        private static Log log = ExoLogger.getLogger(MoveChildActionListener.class);
         public void execute(Event<UIContainer> event) throws Exception {
             PortalRequestContext pcontext = (PortalRequestContext) event.getRequestContext();
             String insertPosition = pcontext.getRequestParameter("insertPosition");
@@ -280,6 +284,44 @@ public class UIPortalComponentActionListener {
                             currentPortal.getSiteKey().getName()).isShowInfobar());
                     uiSource = uiPortlet;
                 }
+
+                PlacementPolicy placementPolicy = portalComposer.getPlacementPolicy();
+                switch (placementPolicy ) {
+                    case RESTRICTED:
+                        /* What is being placed? */
+                        if (uiSource instanceof org.exoplatform.portal.webui.container.UIContainer) {
+                            /* container */
+                            /* target must be root */
+                            if (uiTarget instanceof UIPage) {
+                                /* allowed */
+                            } else {
+                                /* not allowed */
+                                return;
+                            }
+                        } else if (uiSource instanceof UIPortlet) {
+                            /* app */
+                            /* target must be a container */
+                            if (uiTarget instanceof UIPage) {
+                                /* not allowed */
+                                return;
+                            } else if (uiTarget instanceof org.exoplatform.portal.webui.container.UIContainer) {
+                                /* allowed */
+                            } else {
+                                /* not allowed */
+                                return;
+                            }
+                        } else {
+                            log.warn("Unexpected type of uiSource: "+ (uiSource == null ? "null" : uiSource.getClass().getName()));
+                        }
+                        break;
+                    case FULL:
+                        /* No restriction */
+                        break;
+                    default:
+                        log.warn("Unexpected "+ PlacementPolicy.class.getName() +" value '"+ placementPolicy.name() +"'.");
+                }
+
+
                 List<UIComponent> children = uiTarget.getChildren();
                 uiSource.setParent(uiTarget);
                 children.add(position, uiSource);

@@ -25,6 +25,7 @@ import java.util.ResourceBundle;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.exoplatform.commons.utils.PropertyManager;
 import org.exoplatform.portal.Constants;
 import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.portal.config.DataStorage;
@@ -43,7 +44,6 @@ import org.exoplatform.portal.mop.page.PageService;
 import org.exoplatform.portal.mop.page.PageState;
 import org.exoplatform.portal.mop.user.UserNode;
 import org.exoplatform.portal.resource.SkinService;
-import org.exoplatform.portal.webui.application.UIPortlet;
 import org.exoplatform.portal.webui.page.UIPage;
 import org.exoplatform.portal.webui.page.UIPageForm;
 import org.exoplatform.portal.webui.page.UISiteBody;
@@ -55,6 +55,8 @@ import org.exoplatform.portal.webui.workspace.UIPortalApplication;
 import org.exoplatform.portal.webui.workspace.UIPortalApplication.ComponentTab;
 import org.exoplatform.portal.webui.workspace.UIPortalToolPanel;
 import org.exoplatform.portal.webui.workspace.UIWorkingWorkspace;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.UserProfile;
 import org.exoplatform.services.resources.LocaleConfig;
@@ -96,9 +98,23 @@ import org.exoplatform.webui.event.EventListener;
                 @EventConfig(listeners = UIPortalComposer.ToggleActionListener.class) }),
         @ComponentConfig(id = "UIPortalComposerTab", type = UITabPane.class, template = "app:/groovy/portal/webui/portal/UIPortalComposerContent.gtmpl", events = { @EventConfig(listeners = UIPortalComposer.SelectTabActionListener.class) }) })
 public class UIPortalComposer extends UIContainer {
+    private static Log log = ExoLogger.getLogger(UIPortalComposer.class);
+
     public static final String UIPORTAL_COMPOSER = "UIPortalComposer";
 
     public static final String UIPAGE_EDITOR = "UIPageEditor";
+
+    /**
+     * Property settable in the portal's configuration.properties file. See {@link PlacementPolicy} for possible values. See also
+     * {@link #getPlacementPolicy()}.
+     */
+    public static final String PLACEMENT_POLICY_PROPERTY = "gatein.portal.pageEditor.placementPolicy";
+
+    public enum PlacementPolicy {
+        FULL,
+        RESTRICTED
+    }
+
 
     private boolean isEditted = false;
 
@@ -106,11 +122,40 @@ public class UIPortalComposer extends UIContainer {
 
     private boolean isShowControl = true;
 
+    private PlacementPolicy placementPolicy;
+
     public UIPortalComposer() throws Exception {
         UITabPane uiTabPane = addChild(UITabPane.class, "UIPortalComposerTab", null);
         uiTabPane.addChild(UIApplicationList.class, null, null).setRendered(true);
         uiTabPane.addChild(UIContainerList.class, null, null);
         uiTabPane.setSelectedTab(1);
+
+        String val = PropertyManager.getProperty(PLACEMENT_POLICY_PROPERTY);
+        if (val == null || val.length() == 0) {
+            /* hard coded default */
+            placementPolicy = PlacementPolicy.FULL;
+        } else {
+            try {
+                placementPolicy = PlacementPolicy.valueOf(val.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                StringBuilder msg = new StringBuilder().append("Ignoring illegal value '").append(val).append("' of ")
+                        .append(PLACEMENT_POLICY_PROPERTY).append(" property in configuration.properties. One of [");
+                for (PlacementPolicy mode : PlacementPolicy.values()) {
+                    if (msg.charAt(msg.length() - 1) != '[') {
+                        msg.append(", ");
+                    }
+                    msg.append(mode.name());
+                }
+                msg.append("] is expected. Using default value '").append(PlacementPolicy.FULL.name()).append("'.");
+                log.warn(msg.toString());
+                placementPolicy = PlacementPolicy.FULL;
+            }
+        }
+
+    }
+
+    public PlacementPolicy getPlacementPolicy() {
+        return placementPolicy;
     }
 
     public int getPortalMode() {
@@ -308,20 +353,8 @@ public class UIPortalComposer extends UIContainer {
             UIComponent uiComponent = uiTabPane.getChildById(uiTabPane.getSelectedTabId());
             if (uiComponent instanceof UIApplicationList) {
                 uiPortalApp.setDefaultEditMode(ComponentTab.APPLICATIONS);
-//                if (portalMode == UIPortalApplication.APP_VIEW_EDIT_MODE) {
-//                    Util.showComponentEditInViewMode(UIPortlet.class);
-//                } else {
-//                    uiPortalApp.setModeState(UIPortalApplication.APP_BLOCK_EDIT_MODE);
-//                    Util.showComponentLayoutMode(UIPortlet.class);
-//                }
             } else if (uiComponent instanceof UIContainerList) {
                 uiPortalApp.setDefaultEditMode(ComponentTab.CONTAINERS);
-//                if (portalMode == UIPortalApplication.CONTAINER_VIEW_EDIT_MODE) {
-//                    Util.showComponentEditInViewMode(org.exoplatform.portal.webui.container.UIContainer.class);
-//                } else {
-//                    uiPortalApp.setModeState(UIPortalApplication.CONTAINER_BLOCK_EDIT_MODE);
-//                    Util.showComponentLayoutMode(org.exoplatform.portal.webui.container.UIContainer.class);
-//                }
             }
             switch (uiPortalApp.getDefaultEditMode()) {
                 case PREVIEW:

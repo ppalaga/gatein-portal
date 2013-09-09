@@ -1,16 +1,16 @@
 /**
  * Copyright (C) 2009 eXo Platform SAS.
- * 
+ *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this software; if not, write to the Free
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
@@ -23,9 +23,9 @@
  * and some parameters to initialize the DragDrop object.
  */
 
-(function($, base, common) {	
-	eXo.portal.PortalDragDrop = { 
-		
+(function($, base, common) {
+	eXo.portal.PortalDragDrop = {
+
 		/**
 		 * This function inits the PortalDragDrop object
 		 * It initializes a DragDrop object that will manage the drag events
@@ -34,45 +34,45 @@
 	      if (!dragClasses || !dragClasses.length) {
 			return;
 		  }
-			
+
 	      $(".UIPageBody .DragControlArea").off("mouseover").on("mouseover", function() {
 	        if(eXo.portal.portalMode == 1 || eXo.portal.portalMode == 2) {
 	          this.style.cursor ='move';
 	        } else {
-	          this.style.cursor ='default';    		  
+	          this.style.cursor ='default';
 	        }
 	      });
-	      
+
 		  var browser = base.Browser;
 		  var DragDrop = common.DragDrop;
 		  var PortalDragDrop = eXo.portal.PortalDragDrop;
-		  
+
 		  var previewBlock = null;
 			/**
 			 * This function is called after the DragDrop object is initialized
 			 */
-		  var initCallback = function (x, y, mouseX, mouseY, e) {	  	
-			if (eXo.portal.isInDragging) return;		  
+		  var initCallback = function (x, y, mouseX, mouseY, e) {
+			if (eXo.portal.isInDragging) return;
 			var dragObject = this, jDragObj = $(this);
-			
+
 			var origDragObjectStyle = {};
 		    var properties = ["top", eXo.core.I18n.isLT() ? "left" : "right", "zIndex", "opacity", "filter", "position", "width"];
 		    $.each(properties, function(idx, elem) {
 		    	origDragObjectStyle[elem] = dragObject.style[elem];
 		    });
 		    jDragObj.data("origDragObjectStyle", origDragObjectStyle);
-		    
+
 		    var isAddingNewly = jDragObj.children(".UIComponentBlock").length == 0;
 			var originalDragObjectTop = y;
 			var originalDragObjectLeft = x;
 			if (!isAddingNewly && browser.isIE7()) {
 				originalDragObjectLeft = browser.findPosXInContainer(dragObject, $("#UIWorkingWorkspace")[0]);
 			}
-				
+
 		    //use this when press ESC with firefox (cancel dragdrop in column container)
-		    jDragObj.data("backupParentSibling", jDragObj.parent().next("td"));	  
+		    jDragObj.data("backupParentSibling", jDragObj.parent().next("td"));
 		    var backupDragObjectWidth = dragObject.offsetWidth;
-		        
+
 		    var componentBlockWidth = 300;
 		    if(isAddingNewly) {
 		      var cloneObject = jDragObj.clone(true, true);
@@ -81,7 +81,7 @@
 		      cloneObject[0].onDragStart = initCallback;
 		      cloneObject[0].onDrag = dragCallback;
 		      cloneObject[0].onDragEnd = dropCallback;
-		      
+
 		      jDragObj.width(backupDragObjectWidth);
 		      jDragObj.fadeTo(0, 0.5);
 		    } else {
@@ -89,41 +89,41 @@
 		    	dragObject.parentNode.insertBefore(previewBlock, dragObject);
 		    	jDragObj.width(componentBlockWidth).find(".EDITION-BLOCK .NewLayer").each(function() {
 		    		$(this).width(componentBlockWidth);
-		    	});	    	
+		    	});
 		    }
-		    
-		    dragObject.isAddingNewly = isAddingNewly;	    
+
+		    dragObject.isAddingNewly = isAddingNewly;
 		    dragObject.style.position = "absolute";
 		    dragObject.style.top = originalDragObjectTop + "px";
 		    var dragObjectLeft = originalDragObjectLeft;
-		    
+
 		    var objAndMouse = browser.findMouseRelativeX(dragObject.offsetParent, e) - originalDragObjectLeft;
 		    if (objAndMouse > componentBlockWidth/2) {
 		    	var tmp = (objAndMouse*componentBlockWidth)/backupDragObjectWidth;
 		    	dragObjectLeft = originalDragObjectLeft + objAndMouse - tmp;
-		    }	       
-		    
+		    }
+
 		    if (eXo.core.I18n.isRT() && !isAddingNewly && !jDragObj.hasClass("UIPageBody")) {
 		    	dragObject.style.left = originalDragObjectLeft + backupDragObjectWidth - componentBlockWidth + "px";
 		    } else {
 		    	//rt and lt are the same for UIPageBody and newly added obj
 		    	dragObject.style.left = dragObjectLeft + "px";
 		    }
-		    
+
 		    jDragObj.data("dropableTargets", PortalDragDrop.findDropableTargets(dragObject));
 		    eXo.portal.isInDragging = true;
 		  };
-		  
+
 		   var dragCallback = function(nx, ny, ex, ey, e) {
 		     var dragObject = this, jDragObj = $(this);
 		     /* Control Scroll */
 		     eXo.portal.PortalDragDrop.scrollOnDrag(dragObject, e);
-		    
+
 		     var foundTarget = PortalDragDrop.findTarget(dragObject, ex, ey) || jDragObj.data("lastFoundTargetObject");
-		     if (!foundTarget) return;	     
+		     if (!foundTarget) return;
 		     jDragObj.data("lastFoundTargetObject", jDragObj.data("foundTargetObject"));
-		     jDragObj.data("foundTargetObject", foundTarget);	     
-		    
+		     jDragObj.data("foundTargetObject", foundTarget);
+
 		     var jTarget = $(foundTarget);
 		     var uiComponentLayout;
 		     if(foundTarget.className == "UIPage") {
@@ -137,26 +137,26 @@
 		       else uiComponentLayout = foundUIComponent.find(".VIEW-BLOCK").first();
 		       uiComponentLayout.css("height", "auto");
 		     }
-		    
+
 		     var componentIdElement = uiComponentLayout.children("div").first();
 		     var layoutTypeElement = componentIdElement.children("div");
 		     layoutTypeElement = layoutTypeElement.length == 0 ? null : layoutTypeElement[0];
 		     PortalDragDrop.layoutTypeElementNode = layoutTypeElement;
-		    
-		     if(previewBlock == null) previewBlock = PortalDragDrop.createPreview();	    	     
+
+		     if(previewBlock == null) previewBlock = PortalDragDrop.createPreview();
 		     if(layoutTypeElement != null && !$(layoutTypeElement).hasClass("UITableColumnContainer")) {
 		      /* ===============================CASE ROW LAYOUT================================ */
 		      var rowContainer = jTarget.find(".UIRowContainer").first();
 		      var listComponent = rowContainer.children("div").filter(function() {
 		    	  return this.className != "DragAndDropPreview" && this != dragObject;
-		      });	      	      
-		      
+		      });
+
 		      jDragObj.data("listComponentInTarget", listComponent);
 		      var insertPosition = eXo.portal.PortalDragDrop.findInsertPosition(listComponent, "row", ey);
-		      if (jDragObj.data("foundTargetObject") === jDragObj.data("lastFoundTargetObject") && 
-		    		  insertPosition === jDragObj.data("foundIndex")) return;	      
+		      if (jDragObj.data("foundTargetObject") === jDragObj.data("lastFoundTargetObject") &&
+		    		  insertPosition === jDragObj.data("foundIndex")) return;
 		      jDragObj.data("foundIndex", insertPosition);
-		      
+
 		      /* Insert preview block */
 		      if(insertPosition >= 0) {
 		        rowContainer[0].insertBefore(previewBlock, listComponent[insertPosition]);
@@ -167,14 +167,14 @@
 		      /* ===============================CASE COLUMN LAYOUT================================ */
 		      var trContainer = jTarget.find(".TRContainer").first();
 		      var listComponent = trContainer.children("td").filter(function() {
-		    	 return this != previewBlock.parentNode && this != dragObject.parentNode; 
+		    	 return this != previewBlock.parentNode && this != dragObject.parentNode;
 		      });
-		      
+
 		      var insertPosition = eXo.portal.PortalDragDrop.findInsertPosition(listComponent, "column", ex);
-		      if (jDragObj.data("foundTargetObject") === jDragObj.data("lastFoundTargetObject") && 
+		      if (jDragObj.data("foundTargetObject") === jDragObj.data("lastFoundTargetObject") &&
 		    		  insertPosition === jDragObj.data("foundIndex")) return;
 		      jDragObj.data("foundIndex", insertPosition);
-		      
+
 		      /* Insert preview block */
 		      if(insertPosition >= 0) {
 		          trContainer[0].insertBefore(dragObject.parentNode, listComponent[insertPosition]);
@@ -182,13 +182,13 @@
 		          trContainer[0].appendChild(dragObject.parentNode);
 		       }
 		    }
-	
+
 		    var dragParent = $(dragObject).parent();
 		    if (dragParent.children("div").length == 1 && !dragParent.hasClass("EmptyContainer")) {
 		    	dragParent.addClass("EmptyContainer");
 		    }
 		  };
-	
+
 		  var dropCallback = function(x, y, clientX, clientY, e) {
 		    var hasChanged = true;
 		    var dragObject = this, jDragObj = $(this);
@@ -196,11 +196,11 @@
 		  	if (e.which === 27) {
 		  		hasChanged = false;
 		  	}
-		  	//When dragObject is outside 
+		  	//When dragObject is outside
 		  	if (!jDragObj.data("foundTargetObject")) {
 		  		jDragObj.data("foundTargetObject", jDragObj.data("lastFoundTargetObject"));
 		  	}
-		  	
+
 		    var targetElement = jDragObj.data("foundTargetObject");
 		    var foundIndex = jDragObj.data("foundIndex");
 		    if(!targetElement || foundIndex == undefined) {
@@ -211,11 +211,11 @@
 		  	if(!dragObject.isAddingNewly) {
 		      if (dragObject.parentNode.tagName.toLowerCase() == "td") {
 		        //Column Container
-		        var backupParentSibling = jDragObj.data("backupParentSibling"); 
+		        var backupParentSibling = jDragObj.data("backupParentSibling");
 		        var currSibling = jDragObj.parent().next("td");
-		        if ((backupParentSibling.length == 0 && currSibling.length == 0) || 
+		        if ((backupParentSibling.length == 0 && currSibling.length == 0) ||
 		        		currSibling[0] == backupParentSibling[0]) {
-		          hasChanged = false;          
+		          hasChanged = false;
 		        }
 		      } else {
 		        //RowContainer
@@ -226,12 +226,12 @@
 		        }
 		      }
 		  	}
-            
+
 		    if(!dragObject.isAddingNewly) {
 		    	jDragObj.find(".EDITION-BLOCK").last().hide();
 		    	$.extend(dragObject.style, jDragObj.data("origDragObjectStyle"));
 		    }
-		  	
+
 		    if(e.which !== 27) {
 		    	eXo.portal.PortalDragDrop.doDropCallback(dragObject);
 		    } else {
@@ -245,30 +245,30 @@
 		          tdNode.parentNode.insertBefore(tdNode, lastSibling[0]);
 		        }
 		      }
-		      
+
 		      if(dragObject.isAddingNewly) {
 				dragObject.parentNode.removeChild(dragObject);
 			  }
-		    }		   		    
-		    
+		    }
+
 		    if(previewBlock) previewBlock.parentNode.removeChild(previewBlock);
 		    previewBlock = null;
-		    
+
 		    eXo.portal.isInDragging = false;
 		    if (hasChanged) {
 		   	 window.require(["SHARED/portalComposer"], function(composer) {
-		   		 composer.toggleSaveButton();	   		 
+		   		 composer.toggleSaveButton();
 		   	 });
 		    }
-		    
+
 		    jDragObj.removeData();
 		  };
-		  
+
 		  dragClasses = dragClasses.join(",.");
 		  $("." + dragClasses).each(function() {
-			  var dragBlock = this;	  
+			  var dragBlock = this;
 			  var clickObject = $(this).find(".DragControlArea").last();
-	
+
 			  if(clickObject.length != 0) {
 				  //object existing in the current layout
 				  clickObject = clickObject[0];
@@ -277,16 +277,16 @@
 				  clickObject = dragBlock;
 			  }
 			  DragDrop.init(clickObject, dragBlock);
-			  
+
 			  dragBlock.onDragStart = initCallback;
 			  dragBlock.onDrag = dragCallback;
 			  dragBlock.onDragEnd = dropCallback;
-		  });	 	 
+		  });
 		},
-	
+
 		/**
 		 * Perform following works after dropping :
-		 * 
+		 *
 		 * 1. Remove the dragging object if any
 		 * 2. Send an request to server side to update the changes
 		 */
@@ -295,7 +295,7 @@
 		  var PortalDragDrop = eXo.portal.PortalDragDrop;
 		  var targetElement = jDragObj.data("foundTargetObject");
 		  var foundIndex = jDragObj.data("foundIndex")
-		  
+
 		  if(!targetElement || foundIndex == undefined) {
 		  	if(dragObject.isAddingNewly) {
 			    dragObject.parentNode.removeChild(dragObject);
@@ -305,64 +305,73 @@
 		  	}
 		  	return;
 		  }
-		  
+
 		  if(!srcElement.isAddingNewly && (foundIndex != undefined)) {
 		    if(PortalDragDrop.layoutTypeElementNode != null) {
 		      eXo.portal.PortalDragDrop.divRowContainerAddChild(srcElement, targetElement, foundIndex);
 		    }
 		  }
-	
+
 		  if(srcElement.isAddingNewly) {
 		    jDragObj.remove();
 		  }
-		  
+
 		  var params = [
 		    {name: "srcID", value: (srcElement.id.replace(/^UIPortlet-/, ""))},
 		    {name: "targetID", value: targetElement.id.replace(/^.*-/, "")},
 		    {name: "insertPosition", value: foundIndex},
 		    {name: "isAddingNewly", value: srcElement.isAddingNewly}
 		  ] ;
-	
+
 		  // Modified by Philippe : added callback function
 		  ajaxGet(eXo.env.server.createPortalURL("UIPortal", "MoveChild", true, params));
 		},
-	
+
 		/**
 		 * Return an array of droppable target objects
-		 * 
+		 *
 		 * @param the dragging object
 		 */
 		findDropableTargets : function(dragBlock) {
 		  var dropableTargets = new Array();
 		  var jDragObj = $(dragBlock);
-	
+
 	      if (jDragObj.hasClass("UIColumnContainer")) {
 		    var uiTableContainer = jDragObj.closest(".UITableColumnContainer");
 		    dropableTargets.push(uiTableContainer[0]);
 		    return dropableTargets;
 		  }
-	
+
 	      var toolPanel = $("#UIPortalToolPanel");
-		  var uiPortal = toolPanel.find(".UIPortal");
-		  if(uiPortal.length) {
-		    dropableTargets.push(uiPortal[0]);
-		  } else {
-			var uiPage = toolPanel.find(".UIPage");
-		    dropableTargets.push(uiPage[0]);
-		  }
-		  
-		  var uiContainers = toolPanel.find(".UIContainer") ;
-		  uiContainers.each(function() {
-			 var jCont = $(this);
-			 if (!jCont.closest(jDragObj).length && 
-					 !jCont.hasClass("ProtectedContainer") &&
-					 !jCont.hasClass("UITableColumnContainer")) {
-				 dropableTargets.push(this) ;
-			 }  
-		  });
+
+	      /* dragIsContainer is true if we are dragging a container, and false if we drag an app */
+	      var dragIsContainer = !!jDragObj.closest("#UIContainerList").length;
+
+	      /* do not allow an app to be placed to root when the placementPolicy is RESTRICTED  */
+	      if (eXo.portal.placementPolicy == "FULL" || dragIsContainer) {
+			  var uiPortal = toolPanel.find(".UIPortal");
+			  if(uiPortal.length) {
+			    dropableTargets.push(uiPortal[0]);
+			  } else {
+				var uiPage = toolPanel.find(".UIPage");
+			    dropableTargets.push(uiPage[0]);
+			  }
+	      }
+
+
+	      /* do not allow nested containers when the placementPolicy is RESTRICTED  */
+	      if (eXo.portal.placementPolicy == "FULL" || !dragIsContainer) {
+			  var uiContainers = toolPanel.find(".UIContainer") ;
+			  uiContainers.each(function() {
+				 var jCont = $(this);
+				 if (!jCont.closest(jDragObj).length && !jCont.hasClass("ProtectedContainer") && !jCont.hasClass("UITableColumnContainer")) {
+					 dropableTargets.push(this) ;
+				 }
+			  });
+	      }
 		  return dropableTargets;
 		},
-	
+
 		scrollOnDrag : function(dragObject, e) {
 	          var jWin = $(window);
 		  var browserHeight = jWin.height();
@@ -375,10 +384,10 @@
                   var deltaRight = mouseX - (Math.round(browserWidth/6));
 		  var scrollTop = jWin.scrollTop();
                   var scrollLeft = jWin.scrollLeft();
-		  if(deltaTop > 0) {		  
+		  if(deltaTop > 0) {
 			  jWin.scrollTop(scrollTop + deltaTop - 5);
 		  }
-		  
+
 		  if(deltaBottom < 0 && scrollTop > 0) {
 			  jWin.scrollTop(scrollTop + deltaBottom);
 		  }
@@ -391,11 +400,11 @@
                           jWin.scrollLeft(scrollLeft + deltaRight);
                   }
 		},
-	
+
 		/**
 		 * Return a most suiable position among the <code>components</code> objects
 		 * that the dragging object should be at
-		 * 
+		 *
 		 * @param layout {string} the layout type which is "row" or "column"
 		 */
 		findInsertPosition : function(components, layout, mousePos) {
@@ -408,23 +417,23 @@
 		         if (mouseYInPage > componentMIddle) continue;
 		         else return i;
 		      }
-		      
+
 		      return -1;
 		   } else {
 		      for (var i = 0; i < components.length; i++) {
 		         var mouseXInPage = mousePos
 		         var componentX = browser.findPosX(components[i], eXo.core.I18n.isRT());
 		         if (eXo.core.I18n.isRT()) {
-		        	 if (mouseXInPage < componentX) continue;        	 
+		        	 if (mouseXInPage < componentX) continue;
 		         } else if (mouseXInPage > componentX ) continue;
-		                  
-		         return i; 
+
+		         return i;
 		      }
-		      
+
 		      return -1;
 		   }
 		},
-	
+
 		/**
 		 * Create a div block which show the preview block
 		 */
@@ -434,16 +443,16 @@
 			previewBlock.id = "DragAndDropPreview";
 			return previewBlock;
 		},
-	
+
 		findTarget : function(dragObject, mousexInPage, mouseyInPage) {
 		  var dropableTargets = $(dragObject).data("dropableTargets");
 		  if(!dropableTargets) return null;
-		  
+
 		  var foundTarget = null;
 		  var len = dropableTargets.length;
 		  for(var i = 0 ; i < len ; i++) {
 		    var ele =  dropableTargets[i];
-	
+
 		    if(dragObject != ele && this.isIn(mousexInPage, mouseyInPage, ele)) {
 		      if(foundTarget == null) {
 		        foundTarget = ele;
@@ -451,13 +460,13 @@
 		        if($(ele).closest(foundTarget).length > 0) {
 		          foundTarget = ele;
 		        }
-		      } 
+		      }
 		    }
 		  }
-		 	
+
 		  return foundTarget;
 		},
-		  
+
 		isIn : function(x, y, component) {
 		  var browser = base.Browser;
 		  var offset = $(component).offset();
@@ -466,7 +475,7 @@
 		  var componentTop = offset.top;
 		  var componentBottom = componentTop + component.offsetHeight ;
 		  var isOver = false ;
-	
+
 		  if((componentLeft < x) && (x < componentRight)) {
 		    if((componentTop < y) && (y < componentBottom)) {
 		      isOver = true ;
@@ -474,29 +483,29 @@
 		  }
 		  return isOver ;
 		},
-		
+
 		/**
 		 * Add the <code>srcElement</code> dragging object to a container.
 		 * If the dragging object is a column then let remove it from the table column container
 		 */
-		divRowContainerAddChild : function(srcElement, targetElement, insertPosition) {	  
+		divRowContainerAddChild : function(srcElement, targetElement, insertPosition) {
 		  var listComponent = $(srcElement).data("listComponentInTarget");
 		  var uiRowContainer = $(targetElement).find(".UIRowContainer").first();
-		  
+
 		  var parentNode = srcElement.parentNode;
 		  if(insertPosition >= 0) {
 		    uiRowContainer[0].insertBefore(srcElement, listComponent[insertPosition]);
 		  } else {
 		    uiRowContainer[0].appendChild(srcElement);
 		  }
-			
+
 		  uiRowContainer.removeClass("EmptyContainer");
-		  
+
 		  if(parentNode.nodeName.toLowerCase() == "td") {
 		  	$(parentNode).remove();
 		  }
 		}
 	} ;
-	
+
 	return eXo.portal.PortalDragDrop;
 })($, base, common);

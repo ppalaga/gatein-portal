@@ -17,37 +17,42 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-(function($, portalControl, portalDragDrop) {	
+(function($, portalControl, portalDragDrop) {
 	var portalComposer = {
-	
-	  init : function(id, width, height, isEditted, portalMode)
+
+	  /**
+	   * placementPolicy should be submitted as the string representation of
+	   * org.exoplatform.portal.webui.portal.UIPortalComposer.PlacementPolicy
+	   */
+	  init : function(id, width, height, isEditted, portalMode, placementPolicy)
 	  {
 		eXo.portal.portalMode = portalMode;
 		eXo.portal.hasEditted = isEditted;
-			
+		eXo.portal.placementPolicy = placementPolicy;
+
 	    $("div#" + id).attr("exo:minWidth", width).attr("exo:minHeight", height).find("div.OverflowContainer > span").eq(0).on("click", function()
 	    {
 	      portalComposer.toggle($(this));
 	    });
 	  },
-	  
-	  initComposerContent : function(id, selTabId) 
+
+	  initComposerContent : function(id, selTabId)
 	  {
 		  portalComposer.showTab(selTabId);
-		  
+
 		  var tabs = $("#" + id + " .MiddleTab");
 		  tabs.each(function(index) {
 			  $(this).on("click", function() {
 				  portalControl.UIHorizontalTabs.changeTabForUITabPane(this);
-				  var hiddenInput = $(this).children("input");		  
+				  var hiddenInput = $(this).children("input");
 				  portalComposer.showTab(hiddenInput.attr("name"));
 				  $.globalEval(hiddenInput.attr("value"));
-				  
-				  if(eXo.portal.portalMode) eXo.portal.portalMode += (index==0 ? -1 : 1)*2;  		  
+
+				  if(eXo.portal.portalMode) eXo.portal.portalMode += (index==0 ? -1 : 1)*2;
 			  });
 		  });
 	  },
-	
+
 	  toggle : function(icon)
 	  {
 	    var compWindow = icon.parent().closest(".UIPortalComposer");
@@ -62,10 +67,10 @@
 	      contWindow.css("display", "block");
 	      icon.attr("class", "ExpandIcon");
 	    }
-	
+
 	    ajaxAsyncGetRequest(eXo.env.server.createPortalURL(compWindow.attr("id"), "Toggle", true));
 	  },
-	
+
 	  showTab : function(id)
 	  {
 	    var toolPanel = $("#UIPortalToolPanel");
@@ -78,9 +83,9 @@
 	    {
 	      toolPanel.attr("class", "ContainerMode");
 	      $("#UIPageBody .DragControlArea").off("mousedown");
-	    }    
+	    }
 	  },
-	
+
 	  /**
 	   * Invoked when content is modified (comparing to persisted one)
 	   *
@@ -94,11 +99,11 @@
 	      eXo.portal.hasEditted = true;
 	      var compWindow = $("#UIWorkingWorkspace").find("div.UIPortalComposer").eq(0);
 	      compWindow.find("a.SaveButton").attr("class", "EdittedSaveButton");
-	
+
 	      ajaxAsyncGetRequest(eXo.env.server.createPortalURL(compWindow.attr("id"), "ChangeEdittedState", true));
 	    }
 	  }
 	};
-	
+
 	return portalComposer;
 })($, portalControl, portalDragDrop);
