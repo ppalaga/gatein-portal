@@ -45,6 +45,8 @@ import org.exoplatform.portal.webui.workspace.UIMaskWorkspace;
 import org.exoplatform.portal.webui.workspace.UIPortalApplication;
 import org.exoplatform.portal.webui.workspace.UIPortalToolPanel;
 import org.exoplatform.portal.webui.workspace.UIWorkingWorkspace;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.web.application.ApplicationMessage;
@@ -168,6 +170,8 @@ public class UIPortalComponentActionListener {
     }
 
     public static class MoveChildActionListener extends EventListener<UIContainer> {
+        private static Log log = ExoLogger.getLogger(MoveChildActionListener.class);
+
         public void execute(Event<UIContainer> event) throws Exception {
             PortalRequestContext pcontext = (PortalRequestContext) event.getRequestContext();
             String insertPosition = pcontext.getRequestParameter("insertPosition");
@@ -202,7 +206,7 @@ public class UIPortalComponentActionListener {
             String sourceId = pcontext.getRequestParameter("srcID");
             UIComponent uiSource = uiWorking.findComponentById(sourceId);
 
-            UIContainer uiTarget = uiWorking.findComponentById(pcontext.getRequestParameter("targetID"));
+            final UIContainer uiTarget = uiWorking.findComponentById(pcontext.getRequestParameter("targetID"));
             if (position < 0 && uiTarget.getChildren().size() > 0) {
                 position = uiTarget.getChildren().size();
             } else if (position < 0) {
@@ -210,102 +214,22 @@ public class UIPortalComponentActionListener {
             }
 
             if (uiSource == null) {
-                UITabPane subTabPane = portalComposer.getChild(UITabPane.class);
-                UIContainerList uiContainerConfig = subTabPane.getChild(UIContainerList.class);
-                if (uiContainerConfig != null && subTabPane.getSelectedTabId().equals(uiContainerConfig.getId())) {
-                    org.exoplatform.portal.webui.container.UIContainer uiContainer = uiTarget.createUIComponent(
-                            org.exoplatform.portal.webui.container.UIContainer.class, null, null);
-                    Container container = uiContainerConfig.getContainer(sourceId);
-                    // GTNPORTAL-3118: IBM JDK creates negative hashCodes and drag and drop webui logic expects abs values.
-                    container.setId(String.valueOf(Math.abs(container.hashCode())));
-                    uiContainer.setStorageId(container.getStorageId());
-                    PortalDataMapper.toUIContainer(uiContainer, container);
-                    String[] accessPers = uiContainer.getAccessPermissions();
-                    for (String accessPer : accessPers) {
-                        if (accessPer.equals(""))
-                            accessPer = null;
-                    }
-                    if (accessPers == null || accessPers.length == 0)
-                        accessPers = new String[] { UserACL.EVERYONE };
-                    uiContainer.setAccessPermissions(accessPers);
-                    uiSource = uiContainer;
-                } else {
-                    Application app = null;
-                    UIApplicationList appList = uiApp.findFirstComponentOfType(UIApplicationList.class);
-                    app = appList.getApplication(sourceId);
-                    ApplicationType applicationType = app.getType();
-
-                    //
-                    UIPortlet uiPortlet = uiTarget.createUIComponent(UIPortlet.class, null, null);
-                    // Only setting title for Gadgets as it's using Portlet wrapper for displaying
-                    if (app.getType().equals(ApplicationType.GADGET)) {
-                        uiPortlet.setTitle(app.getDisplayName());
-                    }
-                    uiPortlet.setDescription(app.getDescription());
-                    List<String> accessPersList = app.getAccessPermissions();
-                    String[] accessPers = accessPersList.toArray(new String[accessPersList.size()]);
-                    for (String accessPer : accessPers) {
-                        if (accessPer.equals(""))
-                            accessPers = null;
-                    }
-                    if (accessPers == null || accessPers.length == 0)
-                        accessPers = new String[] { UserACL.EVERYONE };
-                    uiPortlet.setAccessPermissions(accessPers);
-                    UIPage uiPage = uiTarget.getAncestorOfType(UIPage.class);
-
-                    // Hardcode on state to fix error while drag/drop Dashboard
-                    if ("dashboard/DashboardPortlet".equals(app.getContentId())) {
-                        TransientApplicationState state = new TransientApplicationState<Object>(app.getContentId());
-                        uiPortlet.setState(new PortletState(state, applicationType));
-                    } else {
-                        ApplicationState state;
-                        // if we have a new portlet added to the page we need for it to have its own state.
-                        // otherwise all new portlets added to a page will have the same state.
-                        if (newComponent) {
-                            state = new TransientApplicationState<Object>(app.getContentId());
-
-                            // if the portlet is not new, then we should clone it from the original portlet
-                        } else {
-                            state = new CloneApplicationState<Object>(app.getStorageId());
-                        }
-                        uiPortlet.setState(new PortletState(state, applicationType));
-                    }
-                    uiPortlet.setPortletInPortal(uiTarget instanceof UIPortal);
-
-                    // TODO Wait to fix issue EXOGTN-213 and then
-                    // we should get "showInfobar" from current UI portal instead of Storage service
-                    UIPortal currentPortal = Util.getUIPortal();
-                    DataStorage storage = uiApp.getApplicationComponent(DataStorage.class);
-                    uiPortlet.setShowInfoBar(storage.getPortalConfig(currentPortal.getSiteKey().getTypeName(),
-                            currentPortal.getSiteKey().getName()).isShowInfobar());
-                    uiSource = uiPortlet;
+                uiSource = prepareUiSource(newComponent, uiApp, portalComposer, sourceId, uiTarget);
+                if (canMove(uiSource, uiTarget)) {
+                    move(position, uiSource, uiTarget);
                 }
-                List<UIComponent> children = uiTarget.getChildren();
-                uiSource.setParent(uiTarget);
-                children.add(position, uiSource);
-                return;
+            } else if (canMove(uiSource, uiTarget)) {
+                move(position, uiSource, uiTarget);
+                tidyUp(pcontext, uiSource);
             }
+        }
 
+        /**
+         * @param pcontext
+         * @param uiSource
+         */
+        private void tidyUp(PortalRequestContext pcontext, UIComponent uiSource) {
             org.exoplatform.portal.webui.container.UIContainer uiParent = uiSource.getParent();
-            if (uiParent == uiTarget) {
-                int currentIdx = uiTarget.getChildren().indexOf(uiSource);
-                if (position <= currentIdx) {
-                    uiTarget.getChildren().add(position, uiSource);
-                    currentIdx++;
-                    uiTarget.getChildren().remove(currentIdx);
-                    return;
-                }
-                uiTarget.getChildren().remove(currentIdx);
-                if (position >= uiTarget.getChildren().size()) {
-                    position = uiTarget.getChildren().size();
-                }
-                uiTarget.getChildren().add(position, uiSource);
-                return;
-            }
-
-            uiTarget.getChildren().add(position, uiSource);
-            uiSource.setParent(uiTarget);
-
             if (UITabContainer.TAB_CONTAINER.equals(uiParent.getFactoryId())) {
                 if (uiParent.getChildren().size() == 1) {
                     UIContainer uiTabParent = uiParent.getParent();
@@ -324,6 +248,115 @@ public class UIPortalComponentActionListener {
                 removeUIComponent(uiParent, pcontext, false);
             } else {
                 uiParent.getChildren().remove(uiSource);
+            }
+        }
+
+        private UIComponent prepareUiSource(boolean newComponent, UIPortalApplication uiApp, UIPortalComposer portalComposer,
+                String sourceId, final UIContainer uiTarget) throws Exception {
+            UIComponent uiSource;
+            UITabPane subTabPane = portalComposer.getChild(UITabPane.class);
+            UIContainerList uiContainerConfig = subTabPane.getChild(UIContainerList.class);
+            if (uiContainerConfig != null && subTabPane.getSelectedTabId().equals(uiContainerConfig.getId())) {
+                org.exoplatform.portal.webui.container.UIContainer uiContainer = uiTarget.createUIComponent(
+                        org.exoplatform.portal.webui.container.UIContainer.class, null, null);
+                Container container = uiContainerConfig.getContainer(sourceId);
+                // GTNPORTAL-3118: IBM JDK creates negative hashCodes and drag and drop webui logic expects abs values.
+                container.setId(String.valueOf(Math.abs(container.hashCode())));
+                container.ensureInitialPermissionsSet();
+                uiContainer.setStorageId(container.getStorageId());
+                PortalDataMapper.toUIContainer(uiContainer, container);
+                uiSource = uiContainer;
+            } else {
+                Application app = null;
+                UIApplicationList appList = uiApp.findFirstComponentOfType(UIApplicationList.class);
+                app = appList.getApplication(sourceId);
+                @SuppressWarnings("unchecked")
+                ApplicationType<Object> applicationType = app.getType();
+
+                //
+                @SuppressWarnings("unchecked")
+                UIPortlet<Object, ?> uiPortlet = uiTarget.createUIComponent(UIPortlet.class, null, null);
+                // Only setting title for Gadgets as it's using Portlet wrapper for displaying
+                if (app.getType().equals(ApplicationType.GADGET)) {
+                    uiPortlet.setTitle(app.getDisplayName());
+                }
+                uiPortlet.setDescription(app.getDescription());
+                List<String> accessPersList = app.getAccessPermissions();
+                String[] accessPers = accessPersList.toArray(new String[accessPersList.size()]);
+                for (String accessPer : accessPers) {
+                    if (accessPer.equals(""))
+                        accessPers = null;
+                }
+                if (accessPers == null || accessPers.length == 0)
+                    accessPers = new String[] { UserACL.EVERYONE };
+                uiPortlet.setAccessPermissions(accessPers);
+
+                // Hardcode on state to fix error while drag/drop Dashboard
+                if ("dashboard/DashboardPortlet".equals(app.getContentId())) {
+                    TransientApplicationState<Object> state = new TransientApplicationState<Object>(app.getContentId());
+                    uiPortlet.setState(new PortletState<Object>(state, applicationType));
+                } else {
+                    ApplicationState<Object> state;
+                    // if we have a new portlet added to the page we need for it to have its own state.
+                    // otherwise all new portlets added to a page will have the same state.
+                    if (newComponent) {
+                        state = new TransientApplicationState<Object>(app.getContentId());
+
+                        // if the portlet is not new, then we should clone it from the original portlet
+                    } else {
+                        state = new CloneApplicationState<Object>(app.getStorageId());
+                    }
+                    uiPortlet.setState(new PortletState<Object>(state, applicationType));
+                }
+                uiPortlet.setPortletInPortal(uiTarget instanceof UIPortal);
+
+                // TODO Wait to fix issue EXOGTN-213 and then
+                // we should get "showInfobar" from current UI portal instead of Storage service
+                UIPortal currentPortal = Util.getUIPortal();
+                DataStorage storage = uiApp.getApplicationComponent(DataStorage.class);
+                uiPortlet.setShowInfoBar(storage.getPortalConfig(currentPortal.getSiteKey().getTypeName(),
+                        currentPortal.getSiteKey().getName()).isShowInfobar());
+                uiSource = uiPortlet;
+            }
+            return uiSource;
+        }
+
+        private boolean canMove(UIComponent uiSource, final UIContainer uiTarget) {
+            if (uiTarget instanceof org.exoplatform.portal.webui.container.UIContainer) {
+                org.exoplatform.portal.webui.container.UIContainer targetContainer = (org.exoplatform.portal.webui.container.UIContainer) uiTarget;
+                if (uiSource instanceof UIPortlet<?, ?>) {
+                    return targetContainer.hasAddApplicationPermission();
+                } else if (uiSource instanceof org.exoplatform.portal.webui.container.UIContainer) {
+                    return targetContainer.hasAddContainerPermission();
+                } else {
+                    log.warn("Unexpected uiSource type '"+ uiSource.getClass().getName() +"'.");
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        /**
+         * @param position
+         * @param uiSource
+         * @param uiTarget
+         */
+        private void move(int position, UIComponent uiSource, final UIContainer uiTarget) {
+            org.exoplatform.portal.webui.container.UIContainer uiParent = uiSource.getParent();
+            List<UIComponent> children = uiTarget.getChildren();
+            if (uiParent == uiTarget) {
+                int currentIdx = children.indexOf(uiSource);
+                if (position < currentIdx) {
+                    children.remove(currentIdx);
+                    children.add(position, uiSource);
+                } else if (position > currentIdx) {
+                    children.add(position, uiSource);
+                    children.remove(currentIdx);
+                }
+            } else {
+                uiSource.setParent(uiTarget);
+                children.add(position, uiSource);
             }
         }
     }

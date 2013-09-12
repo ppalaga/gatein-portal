@@ -19,6 +19,9 @@
 
 package org.exoplatform.portal.webui.container;
 
+import org.exoplatform.container.ExoContainer;
+import org.exoplatform.container.ExoContainerContext;
+import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.webui.portal.UIPortalComponent;
 import org.exoplatform.portal.webui.portal.UIPortalComponentActionListener.DeleteComponentActionListener;
 import org.exoplatform.webui.config.annotation.ComponentConfig;
@@ -38,6 +41,10 @@ public class UIContainer extends UIPortalComponent {
     protected String icon;
 
     protected String description;
+
+    protected String[] addContainerPermissions;
+
+    protected String[] addApplicationPermissions;
 
     public UIContainer() {
     }
@@ -65,4 +72,34 @@ public class UIContainer extends UIPortalComponent {
     public void setDescription(String desc) {
         this.description = desc;
     }
+
+
+    public String[] getAddContainerPermissions() {
+        return addContainerPermissions;
+    }
+
+    public void setAddContainerPermissions(String[] addContainerPermissions) {
+        this.addContainerPermissions = addContainerPermissions;
+    }
+
+    public boolean hasAddContainerPermission() {
+        ExoContainer exoContainer = ExoContainerContext.getCurrentContainer();
+        UserACL acl = (UserACL) exoContainer.getComponentInstanceOfType(UserACL.class);
+        return acl.hasPermission(addContainerPermissions);
+    }
+
+    public String[] getAddApplicationPermissions() {
+        return addApplicationPermissions;
+    }
+
+    public void setAddApplicationPermissions(String[] addApplicationPermissions) {
+        this.addApplicationPermissions = addApplicationPermissions;
+    }
+
+    public boolean hasAddApplicationPermission() {
+        ExoContainer exoContainer = ExoContainerContext.getCurrentContainer();
+        UserACL acl = (UserACL) exoContainer.getComponentInstanceOfType(UserACL.class);
+        return acl.hasPermission(addApplicationPermissions);
+    }
+
 }

@@ -86,6 +86,8 @@ public enum Element implements EnumElement<Element> {
     DESCRIPTION("description"),
     FACTORY_ID("factory-id"),
     ACCESS_PERMISSIONS("access-permissions"),
+    ADD_CONTAINER_PERMISSIONS("add-container-permissions"),
+    ADD_APPLICATION_PERMISSIONS("add-application-permissions"),
     EDIT_PERMISSION("edit-permission"),
     PORTLET_APPLICATION("portlet-application"),
     GADGET_APPLICATION("gadget-application"),
