@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -105,7 +106,7 @@ public class SiteLayoutMarshallerTest extends AbstractMarshallerTest {
             assertEquals("web/BannerPortlet", tas.getContentId());
             Portlet portlet = tas.getContentState();
             int count = 0;
-            for (Preference pref : portlet) {
+            for (Iterator<Preference> it = portlet.iterator(); it.hasNext(); it.next()) {
                 count++;
             }
             assertEquals(1, count);
@@ -172,7 +173,9 @@ public class SiteLayoutMarshallerTest extends AbstractMarshallerTest {
         children.add(new BodyData(null, BodyType.PAGE));
 
         ContainerData layout = new ContainerData(null, null, "container-name", "container-icon", "container-template",
-                "factoryId", "title", "description", "width", "height", Collections.singletonList("blah"), children);
+                "factoryId", "title", "description", "width", "height", Collections.singletonList("accessPermissions"),
+                Collections.singletonList("moveAppsPermissions"), Collections.singletonList("moveContainersPermissions"),
+                children);
 
         Map<String, String> properties = new HashMap<String, String>();
         properties.put("key1", "value1");

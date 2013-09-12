@@ -102,6 +102,9 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
 
         writeOptionalElement(writer, Element.FACTORY_ID, container.getFactoryId());
 
+        marshalPermissions(writer, Element.MOVE_APPLICATIONS_PERMISSIONS, container.getMoveAppsPermissions());
+        marshalPermissions(writer, Element.MOVE_CONTAINERS_PERMISSIONS, container.getMoveContainersPermissions());
+
         List<ModelObject> children = container.getChildren();
         for (ModelObject child : children) {
             marshalModelObject(writer, child);
@@ -137,7 +140,15 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
                     current = navigator.sibling();
                     break;
                 case ACCESS_PERMISSIONS:
-                    container.setAccessPermissions(unmarshalAccessPermissions(navigator, false));
+                    container.setAccessPermissions(unmarshalPermissions(navigator, false));
+                    current = navigator.sibling();
+                    break;
+                case MOVE_APPLICATIONS_PERMISSIONS:
+                    container.setMoveAppsPermissions(unmarshalPermissions(navigator, false));
+                    current = navigator.sibling();
+                    break;
+                case MOVE_CONTAINERS_PERMISSIONS:
+                    container.setMoveContainersPermissions(unmarshalPermissions(navigator, false));
                     current = navigator.sibling();
                     break;
                 case FACTORY_ID:
@@ -494,7 +505,7 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
                     current = navigator.sibling();
                     break;
                 case ACCESS_PERMISSIONS:
-                    application.setAccessPermissions(unmarshalAccessPermissions(navigator, true));
+                    application.setAccessPermissions(unmarshalPermissions(navigator, true));
                     current = navigator.sibling();
                     break;
                 case SHOW_INFO_BAR:
@@ -543,16 +554,19 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     }
 
     protected void marshalAccessPermissions(StaxWriter<Element> writer, String[] accessPermissions) throws XMLStreamException {
-        accessPermissions = (accessPermissions == null || accessPermissions.length == 0) ? null : accessPermissions;
-
-        writeOptionalElement(writer, Element.ACCESS_PERMISSIONS, DelimitedValueType.SEMI_COLON, accessPermissions);
+        marshalPermissions(writer, Element.ACCESS_PERMISSIONS, accessPermissions);
     }
 
-    protected String[] unmarshalAccessPermissions(StaxNavigator<Element> navigator, boolean required) throws XMLStreamException {
+    protected void marshalPermissions(StaxWriter<Element> writer, Element element, String[] accessPermissions) throws XMLStreamException {
+        accessPermissions = (accessPermissions == null || accessPermissions.length == 0) ? null : accessPermissions;
+        writeOptionalElement(writer, element, DelimitedValueType.SEMI_COLON, accessPermissions);
+    }
+
+    protected String[] unmarshalPermissions(StaxNavigator<Element> navigator, boolean required) throws XMLStreamException {
         if (required) {
-            return parseRequiredContent(navigator, DelimitedValueType.SEMI_COLON);
+            return Utils.tidyUp(parseRequiredContent(navigator, DelimitedValueType.SEMI_COLON));
         } else {
-            return parseContent(navigator, DelimitedValueType.SEMI_COLON, null);
+            return Utils.tidyUp(parseContent(navigator, DelimitedValueType.SEMI_COLON, null));
         }
     }
 

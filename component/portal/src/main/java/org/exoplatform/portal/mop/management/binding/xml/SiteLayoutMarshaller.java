@@ -190,7 +190,7 @@ public class SiteLayoutMarshaller extends AbstractMarshaller<PortalConfig> {
                     current = navigator.next();
                     break;
                 case ACCESS_PERMISSIONS:
-                    portalConfig.setAccessPermissions(unmarshalAccessPermissions(navigator, false));
+                    portalConfig.setAccessPermissions(unmarshalPermissions(navigator, false));
                     current = navigator.sibling();
                     break;
                 case EDIT_PERMISSION:

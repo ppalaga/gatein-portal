@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.exoplatform.portal.config.model.Application;
@@ -79,7 +80,7 @@ public class PageMarshallerTest extends AbstractMarshallerTest {
         assertEquals("web/HomePagePortlet", tas.getContentId());
         Portlet portlet = tas.getContentState();
         int count = 0;
-        for (Preference pref : portlet) {
+        for (Iterator<Preference> it = portlet.iterator(); it.hasNext(); it.next()) {
             count++;
         }
         assertEquals(1, count);
@@ -157,7 +158,7 @@ public class PageMarshallerTest extends AbstractMarshallerTest {
             assertEquals("web/HomePagePortlet", tas.getContentId());
             Portlet portlet = tas.getContentState();
             int count = 0;
-            for (Preference pref : portlet) {
+            for (Iterator<Preference> it = portlet.iterator(); it.hasNext(); it.next()) {
                 count++;
             }
             assertEquals(3, count);
@@ -378,11 +379,15 @@ public class PageMarshallerTest extends AbstractMarshallerTest {
 
         ContainerData containerData = new ContainerData(null, "cd-id", "cd-name", "cd-icon", "cd-template", "cd-factoryId",
                 "cd-title", "cd-description", "cd-width", "cd-height", Collections.singletonList("cd-access-permissions"),
+                Collections.singletonList("cd-move-apps-permissions"),
+                Collections.singletonList("cd-move-containers-permissions"),
                 Collections.singletonList((ComponentData) applicationData));
         List<ComponentData> children = Collections.singletonList((ComponentData) containerData);
 
         PageData expectedData = new PageData(null, null, "page-name", null, null, null, "Page Title", null, null, null,
-                Collections.singletonList("access-permissions"), children, "", "", "edit-permission", true);
+                Collections.singletonList("access-permissions"), children, "", "", "edit-permission", true,
+                Collections.singletonList("move-apps-permissions"),
+                Collections.singletonList("move-containers-permissions"));
 
         Page expected = new Page(expectedData);
 
@@ -419,7 +424,9 @@ public class PageMarshallerTest extends AbstractMarshallerTest {
 
         List<ComponentData> children = Collections.singletonList((ComponentData) applicationData);
         PageData expectedData = new PageData(null, null, "page-name", null, null, null, "Page Title", null, null, null,
-                Collections.singletonList("access-permissions"), children, "", "", "edit-permission", true);
+                Collections.singletonList("access-permissions"), children, "", "", "edit-permission", true,
+                Collections.singletonList("move-apps-permissions"),
+                Collections.singletonList("move-containers-permissions"));
 
         Page expected = new Page(expectedData);
 

@@ -946,7 +946,7 @@ public class UIPortlet<S, C extends Serializable> extends UIApplication {
         UIPortalApplication uiApp = (UIPortalApplication) context.getUIApplication();
         int portalMode = uiApp.getModeState();
         if (portalMode != UIPortalApplication.CONTAINER_BLOCK_EDIT_MODE
-                && portalMode != UIPortalApplication.APP_BLOCK_EDIT_MODE && hasPermission()) {
+                && portalMode != UIPortalApplication.APP_BLOCK_EDIT_MODE && hasAccessPermission()) {
             JavascriptManager jsMan = context.getJavascriptManager();
             jsMan.loadScriptResource(ResourceScope.PORTLET, getApplicationId());
         }

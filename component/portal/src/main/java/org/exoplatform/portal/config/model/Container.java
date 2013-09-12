@@ -56,6 +56,10 @@ public class Container extends ModelObject {
 
     protected String[] accessPermissions;
 
+    protected String[] moveAppsPermissions;
+
+    protected String[] moveContainersPermissions;
+
     protected ArrayList<ModelObject> children;
 
     public Container() {
@@ -89,6 +93,10 @@ public class Container extends ModelObject {
         this.width = data.getWidth();
         this.height = data.getHeight();
         this.accessPermissions = data.getAccessPermissions().toArray(new String[data.getAccessPermissions().size()]);
+        List<String> permisssions = data.getMoveAppsPermissions();
+        this.moveAppsPermissions = permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null;
+        permisssions = data.getMoveContainersPermissions();
+        this.moveContainersPermissions = permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null;
         this.children = children;
     }
 
@@ -180,6 +188,23 @@ public class Container extends ModelObject {
         this.accessPermissions = accessPermissions;
     }
 
+
+    public String[] getMoveAppsPermissions() {
+        return moveAppsPermissions;
+    }
+
+    public void setMoveAppsPermissions(String[] moveAppsPermissions) {
+        this.moveAppsPermissions = moveAppsPermissions;
+    }
+
+    public String[] getMoveContainersPermissions() {
+        return moveContainersPermissions;
+    }
+
+    public void setMoveContainersPermissions(String[] moveContainersPermissions) {
+        this.moveContainersPermissions = moveContainersPermissions;
+    }
+
     public String getDecorator() {
         // Here to please jibx binding but not used anymore
         return null;
@@ -194,7 +219,8 @@ public class Container extends ModelObject {
     public ContainerData build() {
         List<ComponentData> children = buildChildren();
         return new ContainerData(storageId, id, name, icon, template, factoryId, title, description, width, height,
-                Utils.safeImmutableList(accessPermissions), children);
+                Utils.safeImmutableList(accessPermissions), Utils.safeImmutableList(moveAppsPermissions),
+                Utils.safeImmutableList(moveContainersPermissions), children);
     }
 
     protected List<ComponentData> buildChildren() {

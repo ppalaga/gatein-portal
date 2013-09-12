@@ -32,6 +32,7 @@ import org.exoplatform.portal.config.model.Page;
 import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.SiteType;
+import org.exoplatform.portal.mop.management.operations.page.PageUtils;
 import org.exoplatform.portal.mop.navigation.NavigationContext;
 import org.exoplatform.portal.mop.navigation.NavigationService;
 import org.exoplatform.portal.mop.page.PageContext;
@@ -212,9 +213,7 @@ public class UIPageActionListener {
 
                         //
                         PageService pageService = uiPage.getApplicationComponent(PageService.class);
-                        PageState pageState = new PageState(page.getTitle(), page.getDescription(), page.isShowMaxWindow(),
-                                page.getFactoryId(), page.getAccessPermissions() != null ? Arrays.asList(page
-                                        .getAccessPermissions()) : null, page.getEditPermission());
+                        PageState pageState = PageUtils.toPageState(page);
                         pageService.savePage(new PageContext(page.getPageKey(), pageState));
 
                         //
@@ -245,9 +244,7 @@ public class UIPageActionListener {
 
                 //
                 PageService pageService = uiPage.getApplicationComponent(PageService.class);
-                PageState pageState = new PageState(page.getTitle(), page.getDescription(), page.isShowMaxWindow(),
-                        page.getFactoryId(), page.getAccessPermissions() != null ? Arrays.asList(page.getAccessPermissions())
-                                : null, page.getEditPermission());
+                PageState pageState = PageUtils.toPageState(page);
                 pageService.savePage(new PageContext(page.getPageKey(), pageState));
 
                 //

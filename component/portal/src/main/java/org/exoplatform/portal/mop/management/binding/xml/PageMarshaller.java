@@ -152,7 +152,7 @@ public class PageMarshaller extends AbstractMarshaller<Page.PageSet> {
                     current = navigator.sibling();
                     break;
                 case ACCESS_PERMISSIONS:
-                    page.setAccessPermissions(unmarshalAccessPermissions(navigator, true));
+                    page.setAccessPermissions(unmarshalPermissions(navigator, true));
                     current = navigator.sibling();
                     break;
                 case EDIT_PERMISSION:

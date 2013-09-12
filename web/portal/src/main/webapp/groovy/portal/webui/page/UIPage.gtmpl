@@ -1,4 +1,21 @@
-<div class="UIPage" id="UIPage-${uicomponent.id}">
+<%
+	import org.exoplatform.portal.webui.workspace.UIPortalApplication;
+
+	def rcontext = _ctx.getRequestContext();
+	UIPortalApplication uiPortalApp = rcontext.getUIApplication();
+	String permissionClasses = "";
+	if (uiPortalApp.isEditing())
+	{
+		StringBuilder permissionClassesBuilder = new StringBuilder();
+		if (uicomponent.hasMoveAppsPermission()) {
+			permissionClassesBuilder.append(" HasMoveAppsPermissions");
+		}
+		if (uicomponent.hasMoveContainersPermission()) {
+			permissionClassesBuilder.append(" HasMoveContainersPermissions");
+		}
+		permissionClasses = permissionClassesBuilder.toString();
+	}
+%><div class="UIPage<%=permissionClasses%>" id="UIPage-${uicomponent.id}">
 	<div class="UIComponentBlock">
 		<div class="VIEW-PAGE">
 			<div id="UIPage">

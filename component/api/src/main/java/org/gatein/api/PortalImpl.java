@@ -275,10 +275,10 @@ public class PortalImpl implements Portal {
             throw new EntityNotFoundException("Site " + pageId.getSiteId() + " doesn't exist");
         }
 
-        Permission access = Permission.everyone();
         Permission edit = Permission.any("platform", "administrators");
-        PageState pageState = new PageState(pageId.getPageName(), null, false, null, Arrays.asList(Util.from(access)),
-            Util.from(edit)[0]);
+        PageState pageState = new PageState(pageId.getPageName(), null, false, null, Arrays.asList(Util.from(Permission
+                .everyone())), Util.from(edit)[0], Arrays.asList(Util.from(Permission.everyone())), Arrays.asList(Util
+                .from(Permission.everyone())));
 
         PageImpl p = new PageImpl(new PageContext(Util.from(pageId), pageState));
         p.setCreate(true);
