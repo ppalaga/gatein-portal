@@ -149,6 +149,11 @@ eXo.portal.UIPortal = {
 
     if (isOver)
     {
+      var parent = this.findParentContainer(block);
+      if (!this.canMoveComponent(block, parent)) {
+        /* Nothing to do if the removal is not allowed. */
+        return;
+      }
       var newLayer = editBlock.find("div.NewLayer").eq(0);
       var height = 0;
       var width = 0;
@@ -316,7 +321,33 @@ eXo.portal.UIPortal = {
     {
       viewPage.css({"paddingTop" : "50px", "paddingRight" : "0px", "paddingBottom" : "50px", "paddingLeft" : "0px"});
     }
-  }
+  },
+  findParentContainer : function(componentElement) {
+      var jqStart = $(componentElement).parent();
+      var result = jqStart.closest(".UIContainer");
+      if (!result.length) {
+    	  result = jqStart.closest(".UIPage");
+      }
+      if (!result.length) {
+    	  result = jqStart.closest(".UIPortal");
+      }
+      return result.length ? result[0] : null;
+  },
+  canMoveComponent : function(componentElement, parentContainerElement) {
+      if (parentContainerElement) {
+        var jqComponentElement = $(componentElement);
+        var jqParentContainerElement = $(parentContainerElement);
+        /* the second disjunct is for the case when componentElement is newly added from the palette */
+        var jqElementIsContainer = jqComponentElement.hasClass("UIContainer")
+                || !!jqComponentElement.closest("#UIContainerList").length;
+        return jqComponentElement.hasClass("UIPageBody") // Everybody can move UIPageBody
+            || (jqElementIsContainer && !jqParentContainerElement.hasClass("CannotMoveContainers"))
+            || (!jqElementIsContainer && !jqParentContainerElement.hasClass("CannotMoveApps"));
+      }
+      else {
+        return false;
+      }
+    }
 };
 
 return {UIPortal : eXo.portal.UIPortal,

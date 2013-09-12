@@ -232,4 +232,16 @@ public class UIPage extends UIContainer {
         }
     }
 
+    @Override
+    public String getPermissionClasses() {
+        StringBuilder permissionClasses = new StringBuilder();
+        if (!hasMoveAppsPermission()) {
+            permissionClasses.append(" CannotMoveApps");
+        }
+        if (!hasMoveContainersPermission()) {
+            permissionClasses.append(" CannotMoveContainers");
+        }
+        return permissionClasses.toString();
+    }
+
 }

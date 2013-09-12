@@ -37,6 +37,7 @@ import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.config.model.PortalProperties;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.SiteType;
+import org.exoplatform.portal.mop.management.operations.page.PageUtils;
 import org.exoplatform.portal.mop.page.PageContext;
 import org.exoplatform.portal.mop.page.PageKey;
 import org.exoplatform.portal.mop.page.PageService;
@@ -678,9 +679,7 @@ public class UIPortalComposer extends UIContainer {
             DataStorage dataService = uiWorkingWS.getApplicationComponent(DataStorage.class);
             PageService pageService = uiWorkingWS.getApplicationComponent(PageService.class);
             try {
-                PageState pageState = new PageState(page.getTitle(), page.getDescription(), page.isShowMaxWindow(),
-                        page.getFactoryId(), page.getAccessPermissions() != null ? Arrays.asList(page.getAccessPermissions())
-                                : null, page.getEditPermission());
+                PageState pageState = PageUtils.toPageState(page);
                 pageService.savePage(new PageContext(pageKey, pageState));
                 dataService.save(page);
             } catch (StaleModelException ex) {

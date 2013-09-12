@@ -58,6 +58,7 @@ import org.exoplatform.webui.event.EventListener;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -387,5 +388,17 @@ public class UIPortal extends UIContainer {
 
     public ArrayList<PortalRedirect> getPortalRedirects() {
         return portalRedirects;
+    }
+
+    @Override
+    public String getPermissionClasses() {
+        StringBuilder permissionClasses = new StringBuilder();
+        if (!hasMoveAppsPermission()) {
+            permissionClasses.append(" CannotMoveApps");
+        }
+        if (!hasMoveContainersPermission()) {
+            permissionClasses.append(" CannotMoveContainers");
+        }
+        return permissionClasses.toString();
     }
 }
