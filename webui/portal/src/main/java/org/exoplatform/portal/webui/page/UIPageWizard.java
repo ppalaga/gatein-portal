@@ -118,9 +118,7 @@ public abstract class UIPageWizard extends UIWizard {
             UIPortalToolPanel toolPanel = uiWorkingWS.findFirstComponentOfType(UIPortalToolPanel.class);
             toolPanel.setUIComponent(null);
             pcontext.addUIComponentToUpdateByAjax(uiWorkingWS);
-            JavascriptManager jsManager = event.getRequestContext().getJavascriptManager();
-            jsManager.require("SHARED/portal", "portal").addScripts(
-                    "eXo.portal.portalMode=" + UIPortalApplication.NORMAL_MODE + ";");
+            Util.updatePortalMode();
         }
     }
 }
