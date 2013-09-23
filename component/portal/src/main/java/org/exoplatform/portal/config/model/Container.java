@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.pom.config.Utils;
 import org.exoplatform.portal.pom.data.ComponentData;
 import org.exoplatform.portal.pom.data.ContainerData;
@@ -33,12 +32,6 @@ import org.exoplatform.portal.pom.data.ModelData;
  * @author Tuan Nguyen
  **/
 public class Container extends ModelObject {
-
-    public static final String[] DEFAULT_ACCESS_PERMISSIONS = new String[] { UserACL.EVERYONE };
-
-    public static final String[] DEFAULT_ADD_APPLICATION_PERMISSIONS_PERMISSIONS = new String[] { UserACL.EVERYONE };
-
-    public static final String[] DEFAULT_ADD_CONTAINER_PERMISSIONS_PERMISSIONS = new String[] { UserACL.EVERYONE };
 
     protected String id;
 
@@ -63,9 +56,9 @@ public class Container extends ModelObject {
 
     protected String[] accessPermissions;
 
-    protected String[] addContainerPermissions;
-
     protected String[] addApplicationPermissions;
+
+    protected String[] addContainerPermissions;
 
     protected ArrayList<ModelObject> children;
 
@@ -191,13 +184,6 @@ public class Container extends ModelObject {
         this.accessPermissions = accessPermissions;
     }
 
-    public String[] getAddContainerPermissions() {
-        return addContainerPermissions;
-    }
-
-    public void setAddContainerPermissions(String[] addContainerPermissions) {
-        this.addContainerPermissions = addContainerPermissions;
-    }
 
     public String[] getAddApplicationPermissions() {
         return addApplicationPermissions;
@@ -207,23 +193,12 @@ public class Container extends ModelObject {
         this.addApplicationPermissions = addApplicationPermissions;
     }
 
-    public void ensureInitialPermissionsSet() {
-        if (accessPermissions == null || accessPermissions.length == 0) {
-            accessPermissions = DEFAULT_ACCESS_PERMISSIONS;
-        }
-//        if (addApplicationPermissions == null || addApplicationPermissions.length == 0) {
-//            addApplicationPermissions = DEFAULT_ADD_APPLICATION_PERMISSIONS_PERMISSIONS;
-//        }
-//        if (addContainerPermissions == null || addContainerPermissions.length == 0) {
-//            addContainerPermissions = DEFAULT_ADD_CONTAINER_PERMISSIONS_PERMISSIONS;
-//        }
-        if (children != null && children.size() > 0) {
-            for (ModelObject o : children) {
-                if (o instanceof Container) {
-                    ((Container) o).ensureInitialPermissionsSet();
-                }
-            }
-        }
+    public String[] getAddContainerPermissions() {
+        return addContainerPermissions;
+    }
+
+    public void setAddContainerPermissions(String[] addContainerPermissions) {
+        this.addContainerPermissions = addContainerPermissions;
     }
 
     public String getDecorator() {
@@ -240,7 +215,8 @@ public class Container extends ModelObject {
     public ContainerData build() {
         List<ComponentData> children = buildChildren();
         return new ContainerData(storageId, id, name, icon, template, factoryId, title, description, width, height,
-                Utils.safeImmutableList(accessPermissions), children);
+                Utils.safeImmutableList(accessPermissions), Utils.safeImmutableList(addApplicationPermissions),
+                Utils.safeImmutableList(addContainerPermissions), children);
     }
 
     protected List<ComponentData> buildChildren() {

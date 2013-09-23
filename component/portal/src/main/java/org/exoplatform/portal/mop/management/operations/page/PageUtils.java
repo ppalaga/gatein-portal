@@ -76,7 +76,8 @@ public class PageUtils {
     public static PageState toPageState(Page page) {
         return new PageState(page.getTitle(), page.getDescription(), page.isShowMaxWindow(), page.getFactoryId(),
                 page.getAccessPermissions() != null ? Arrays.asList(page.getAccessPermissions()) : null,
-                page.getEditPermission());
+                page.getEditPermission(), page.getAddApplicationPermissions() != null ? Arrays.asList(page.getAddApplicationPermissions()) : null,
+                page.getAddContainerPermissions() != null ? Arrays.asList(page.getAddContainerPermissions()) : null);
     }
 
     public static <S> Application<S> copy(Application<S> existing) {

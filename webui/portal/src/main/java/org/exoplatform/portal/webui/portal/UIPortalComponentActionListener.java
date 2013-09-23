@@ -262,7 +262,6 @@ public class UIPortalComponentActionListener {
                 Container container = uiContainerConfig.getContainer(sourceId);
                 // GTNPORTAL-3118: IBM JDK creates negative hashCodes and drag and drop webui logic expects abs values.
                 container.setId(String.valueOf(Math.abs(container.hashCode())));
-                container.ensureInitialPermissionsSet();
                 uiContainer.setStorageId(container.getStorageId());
                 PortalDataMapper.toUIContainer(uiContainer, container);
                 uiSource = uiContainer;

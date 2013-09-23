@@ -34,6 +34,7 @@ import org.exoplatform.portal.config.model.ModelObject;
 import org.exoplatform.portal.config.model.Page;
 import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.mop.Described;
+import org.exoplatform.portal.mop.ProtectedContainer;
 import org.exoplatform.portal.mop.ProtectedResource;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.Visibility;
@@ -294,6 +295,8 @@ public class TestMOP extends AbstractConfigTest {
         org.gatein.mop.api.workspace.Page layout = portal.getRootNavigation().getTemplatized().getTemplate();
         assertNotNull(layout);
         assertSame(portal.getRootPage().getChild("templates").getChild("default"), layout);
+
+        fail("implement add-container-permission and add-application-permission tests");
     }
 
     public void testSavePageWithoutPageId() throws Exception {
@@ -314,8 +317,13 @@ public class TestMOP extends AbstractConfigTest {
         //
         assertTrue(testPage.isAdapted(ProtectedResource.class));
         ProtectedResource pr = testPage.adapt(ProtectedResource.class);
-        assertEquals(Arrays.asList("test_access_permissions"), pr.getAccessPermissions());
+        assertEquals(Collections.singleton("test_access_permissions"), pr.getAccessPermissions());
         assertEquals("test_edit_permission", pr.getEditPermission());
+
+        assertTrue(testPage.isAdapted(ProtectedContainer.class));
+        ProtectedContainer pc = testPage.adapt(ProtectedContainer.class);
+        assertEquals(Collections.singleton("test_add_application_permissions"), pc.getAddApplicationPermissions());
+        assertEquals(Collections.singleton("test_add_container_permissions"), pc.getAddContainerPermissions());
 
         //
         Described testPageDescribed = testPage.adapt(Described.class);
@@ -372,5 +380,8 @@ public class TestMOP extends AbstractConfigTest {
         assertEquals("application/portlet", customization.getType().getMimeType());
         assertEquals("web/BannerPortlet", customization.getContentId());
         // assertEquals("banner", customization.getName());
+
+        fail("implement add-container-permission and add-application-permission tests");
     }
+
 }

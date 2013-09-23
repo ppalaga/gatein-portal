@@ -144,7 +144,8 @@ public class Page extends Container {
     public PageData build() {
         List<ComponentData> children = buildChildren();
         return new PageData(storageId, id, name, icon, template, factoryId, title, description, width, height,
-                Utils.safeImmutableList(accessPermissions), children, ownerType, ownerId, editPermission, showMaxWindow);
+                Utils.safeImmutableList(accessPermissions), children, ownerType, ownerId, editPermission, showMaxWindow,
+                Utils.safeImmutableList(addApplicationPermissions), Utils.safeImmutableList(addContainerPermissions));
     }
 
     public static class PageSet {

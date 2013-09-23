@@ -25,5 +25,4 @@
     xsi:schemaLocation="http://www.gatein.org/xml/ns/gatein_objects_1_6 http://www.gatein.org/xml/ns/gatein_objects_1_6"
     xmlns="http://www.gatein.org/xml/ns/gatein_objects_1_6">
   <name></name>
-  <add-container-permissions>Everyone</add-container-permissions>
 </page>

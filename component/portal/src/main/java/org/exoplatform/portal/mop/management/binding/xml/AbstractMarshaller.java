@@ -28,7 +28,6 @@ import static org.gatein.common.xml.stax.writer.StaxWriterUtils.writeOptionalCon
 import static org.gatein.common.xml.stax.writer.StaxWriterUtils.writeOptionalElement;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -100,10 +99,11 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
         writeOptionalElement(writer, Element.DESCRIPTION, container.getDescription());
 
         marshalAccessPermissions(writer, container.getAccessPermissions());
-        marshalPermissions(writer, Element.ADD_APPLICATION_PERMISSIONS, container.getAddApplicationPermissions());
-        marshalPermissions(writer, Element.ADD_CONTAINER_PERMISSIONS, container.getAddContainerPermissions());
 
         writeOptionalElement(writer, Element.FACTORY_ID, container.getFactoryId());
+
+        marshalPermissions(writer, Element.ADD_APPLICATION_PERMISSIONS, container.getAddApplicationPermissions());
+        marshalPermissions(writer, Element.ADD_CONTAINER_PERMISSIONS, container.getAddContainerPermissions());
 
         List<ModelObject> children = container.getChildren();
         for (ModelObject child : children) {
@@ -143,12 +143,12 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
                     container.setAccessPermissions(unmarshalPermissions(navigator, false));
                     current = navigator.sibling();
                     break;
-                case ADD_CONTAINER_PERMISSIONS:
-                    container.setAddContainerPermissions(unmarshalPermissions(navigator, false));
-                    current = navigator.sibling();
-                    break;
                 case ADD_APPLICATION_PERMISSIONS:
                     container.setAddApplicationPermissions(unmarshalPermissions(navigator, false));
+                    current = navigator.sibling();
+                    break;
+                case ADD_CONTAINER_PERMISSIONS:
+                    container.setAddContainerPermissions(unmarshalPermissions(navigator, false));
                     current = navigator.sibling();
                     break;
                 case FACTORY_ID:

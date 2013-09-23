@@ -98,6 +98,8 @@ public class PortalDataMapper {
         model.setTemplate(uiContainer.getTemplate());
         model.setFactoryId(uiContainer.getFactoryId());
         model.setAccessPermissions(uiContainer.getAccessPermissions());
+        model.setAddApplicationPermissions(uiContainer.getAddApplicationPermissions());
+        model.setAddContainerPermissions(uiContainer.getAddContainerPermissions());
 
         List<UIComponent> uiChildren = uiContainer.getChildren();
         if (uiChildren == null)

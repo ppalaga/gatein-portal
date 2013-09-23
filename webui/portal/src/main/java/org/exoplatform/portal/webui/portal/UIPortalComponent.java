@@ -27,14 +27,6 @@ import org.exoplatform.webui.core.UIContainer;
 /**
  * May 19, 2006
  */
-/**
- * @author <a href="mailto:ppalaga@redhat.com">Peter Palaga</a>
- *
- */
-/**
- * @author <a href="mailto:ppalaga@redhat.com">Peter Palaga</a>
- *
- */
 public class UIPortalComponent extends UIContainer {
 
     protected String template_;
