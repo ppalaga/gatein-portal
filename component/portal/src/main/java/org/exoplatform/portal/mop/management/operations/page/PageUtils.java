@@ -167,7 +167,6 @@ public class PageUtils {
         return pageSet;
     }
 
-    @SuppressWarnings("unused")
     public static PageBody copy(PageBody existing) {
         return new PageBody();
     }
@@ -188,6 +187,8 @@ public class PageUtils {
 
     private static void copyFields(Container existing, Container container) {
         container.setAccessPermissions(copy(existing.getAccessPermissions()));
+        container.setAddApplicationPermissions(copy(existing.getAddApplicationPermissions()));
+        container.setAddContainerPermissions(copy(existing.getAddContainerPermissions()));
         container.setChildren(copyChildren(existing.getChildren()));
         container.setDecorator(existing.getDecorator());
         container.setDescription(existing.getDescription());
@@ -208,8 +209,7 @@ public class PageUtils {
 
         for (ModelObject object : existing) {
             if (object instanceof Application) {
-                @SuppressWarnings("unchecked")
-                Application app = copy((Application) object);
+                Application<?> app = copy((Application<?>) object);
 
                 children.add(app);
             }

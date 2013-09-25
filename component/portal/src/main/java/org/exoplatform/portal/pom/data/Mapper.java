@@ -39,6 +39,7 @@ import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.config.model.ApplicationState;
 import org.exoplatform.portal.config.model.ApplicationType;
 import org.exoplatform.portal.config.model.CloneApplicationState;
+import org.exoplatform.portal.config.model.Container;
 import org.exoplatform.portal.config.model.PersistentApplicationState;
 import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.config.model.TransientApplicationState;
@@ -443,8 +444,9 @@ public class Mapper {
             addApplicationPermissions = pc.getAddApplicationPermissions();
             addContainerPermissions = pc.getAddContainerPermissions();
         } else {
-            addApplicationPermissions = Collections.emptyList();
-            addContainerPermissions = Collections.emptyList();
+            /* legacy mode */
+            addApplicationPermissions = ProtectedContainer.DEFAULT_ADD_APPLICATION_PERMISSIONS;
+            addContainerPermissions = ProtectedContainer.DEFAULT_ADD_CONTAINER_PERMISSIONS;
         }
 
         //

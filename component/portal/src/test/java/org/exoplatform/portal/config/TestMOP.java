@@ -19,6 +19,8 @@
 
 package org.exoplatform.portal.config;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,9 +66,6 @@ import org.gatein.mop.api.workspace.ui.UIWindow;
 public class TestMOP extends AbstractConfigTest {
 
     /** . */
-    private UserPortalConfigService portalConfigService;
-
-    /** . */
     private DataStorage storage;
 
     /** . */
@@ -89,7 +88,6 @@ public class TestMOP extends AbstractConfigTest {
         super.setUp();
         begin();
         PortalContainer container = getContainer();
-        portalConfigService = (UserPortalConfigService) container.getComponentInstanceOfType(UserPortalConfigService.class);
         storage = (DataStorage) container.getComponentInstanceOfType(DataStorage.class);
         pageService = (PageService) container.getComponentInstanceOfType(PageService.class);
         mgr = (POMSessionManager) container.getComponentInstanceOfType(POMSessionManager.class);
@@ -164,7 +162,7 @@ public class TestMOP extends AbstractConfigTest {
 
         assertEquals("test", portal.getName());
         assertEquals("en", portal.getLocale());
-        assertTrue(Arrays.equals(new String[] { "test_access_permissions" }, portal.getAccessPermissions()));
+        assertArrayEquals(new String[] { "test_access_permissions" }, portal.getAccessPermissions());
         assertEquals("test_edit_permission", portal.getEditPermission());
         assertEquals("test_skin", portal.getSkin());
         assertEquals("test_prop_value", portal.getProperty("prop_key"));
@@ -205,17 +203,17 @@ public class TestMOP extends AbstractConfigTest {
         assertEquals("container_1_title", container1.getTitle());
         assertEquals("container_1_icon", container1.getIcon());
         assertEquals("container_1_template", container1.getTemplate());
-        assertTrue(Arrays.equals(new String[] { "container_1_access_permissions" }, container1.getAccessPermissions()));
+        assertArrayEquals(new String[] { "container_1_access_permissions" }, container1.getAccessPermissions());
         assertEquals("container_1_factory_id", container1.getFactoryId());
         assertEquals("container_1_description", container1.getDescription());
         assertEquals("container_1_width", container1.getWidth());
         assertEquals("container_1_height", container1.getHeight());
 
         //
-        Application application1 = (Application) children.get(1);
+        Application<?> application1 = (Application<?>) children.get(1);
         assertEquals("application_1_theme", application1.getTheme());
         assertEquals("application_1_title", application1.getTitle());
-        assertTrue(Arrays.equals(new String[] { "application_1_access_permissions" }, application1.getAccessPermissions()));
+        assertArrayEquals(new String[] { "application_1_access_permissions" }, application1.getAccessPermissions());
         assertEquals(true, application1.getShowInfoBar());
         assertEquals(true, application1.getShowApplicationState());
         assertEquals(true, application1.getShowApplicationMode());
@@ -281,7 +279,7 @@ public class TestMOP extends AbstractConfigTest {
         //
         assertTrue(portal.isAdapted(ProtectedResource.class));
         ProtectedResource pr = portal.adapt(ProtectedResource.class);
-        assertEquals(Arrays.asList("test_access_permissions"), pr.getAccessPermissions());
+        assertEquals(Collections.singletonList("test_access_permissions"), pr.getAccessPermissions());
         assertEquals("test_edit_permission", pr.getEditPermission());
 
         //
@@ -296,7 +294,15 @@ public class TestMOP extends AbstractConfigTest {
         assertNotNull(layout);
         assertSame(portal.getRootPage().getChild("templates").getChild("default"), layout);
 
-        fail("implement add-container-permission and add-application-permission tests");
+        /* There are no add-application-permissions or add-container-permissions in the underlying portal.xml file
+         * so there should be no ProtectedContainer mixin... */
+        assertFalse(layout.isAdapted(ProtectedContainer.class));
+
+        /* ... and when we access the the mixin anyway, there should be nulls there */
+        ProtectedContainer pc = layout.adapt(ProtectedContainer.class);
+        assertNull(pc.getAddApplicationPermissions());
+        assertNull(pc.getAddContainerPermissions());
+
     }
 
     public void testSavePageWithoutPageId() throws Exception {
@@ -317,13 +323,13 @@ public class TestMOP extends AbstractConfigTest {
         //
         assertTrue(testPage.isAdapted(ProtectedResource.class));
         ProtectedResource pr = testPage.adapt(ProtectedResource.class);
-        assertEquals(Collections.singleton("test_access_permissions"), pr.getAccessPermissions());
+        assertEquals(Collections.singletonList("test_access_permissions"), pr.getAccessPermissions());
         assertEquals("test_edit_permission", pr.getEditPermission());
 
         assertTrue(testPage.isAdapted(ProtectedContainer.class));
         ProtectedContainer pc = testPage.adapt(ProtectedContainer.class);
-        assertEquals(Collections.singleton("test_add_application_permissions"), pc.getAddApplicationPermissions());
-        assertEquals(Collections.singleton("test_add_container_permissions"), pc.getAddContainerPermissions());
+        assertEquals(Collections.singletonList("test_add_application_permissions"), pc.getAddApplicationPermissions());
+        assertEquals(Collections.singletonList("test_add_container_permissions"), pc.getAddContainerPermissions());
 
         //
         Described testPageDescribed = testPage.adapt(Described.class);
