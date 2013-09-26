@@ -93,6 +93,10 @@ public class Container extends ModelObject {
         this.width = data.getWidth();
         this.height = data.getHeight();
         this.accessPermissions = data.getAccessPermissions().toArray(new String[data.getAccessPermissions().size()]);
+        List<String> permisssions = data.getAddApplicationPermissions();
+        this.addApplicationPermissions = permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null;
+        permisssions = data.getAddContainerPermissions();
+        this.addContainerPermissions = permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null;
         this.children = children;
     }
 

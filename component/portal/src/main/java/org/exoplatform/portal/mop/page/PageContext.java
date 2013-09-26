@@ -81,11 +81,14 @@ public class PageContext {
         page.setDescription(s.description);
         page.setFactoryId(s.factoryId);
         page.setShowMaxWindow(s.showMaxWindow);
+
         List<String> permisssions = s.accessPermissions;
         page.setAccessPermissions(permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null);
         page.setEditPermission(getState().editPermission);
+
         permisssions = s.addApplicationPermissions;
         page.setAddApplicationPermissions(permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null);
+
         permisssions = s.addContainerPermissions;
         page.setAddContainerPermissions(permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null);
     }

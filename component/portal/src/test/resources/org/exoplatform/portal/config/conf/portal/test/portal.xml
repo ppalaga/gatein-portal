@@ -26,7 +26,7 @@
     xmlns="http://www.gatein.org/xml/ns/gatein_objects_1_6">
   <portal-name>test</portal-name>
   <locale>en</locale>
-  <access-permissions>test_access_permissions</access-permissions>
+  <access-permissions>test_portal_access_permissions</access-permissions>
   <edit-permission>test_edit_permission</edit-permission>
   <skin>test_skin</skin>
 

@@ -118,6 +118,20 @@ public class PageState implements Serializable {
         return accessPermissions;
     }
 
+    /**
+     * @return the addApplicationPermissions
+     */
+    public List<String> getAddApplicationPermissions() {
+        return addApplicationPermissions;
+    }
+
+    /**
+     * @return the addContainerPermissions
+     */
+    public List<String> getAddContainerPermissions() {
+        return addContainerPermissions;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
