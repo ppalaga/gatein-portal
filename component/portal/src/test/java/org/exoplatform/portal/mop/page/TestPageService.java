@@ -43,8 +43,12 @@ public class TestPageService extends AbstractTestPageService {
         Attributes fooAttrs = foo.getAttributes();
         fooAttrs.setValue(MappedAttributes.FACTORY_ID, "foo_factory_id");
         fooAttrs.setValue(MappedAttributes.SHOW_MAX_WINDOW, true);
+
+        ProtectedContainer pc = foo.adapt(ProtectedContainer.class);
+        pc.setAddApplicationPermissions(Collections.singletonList("foo-add-application-permissions"));
+        pc.setAddContainerPermissions(Collections.singletonList("foo-add-container-permissions"));
+
         sync(true);
-        fail("implement add-container-permission and add-application-permission tests");
 
         //
         service.clearCache();
@@ -59,6 +63,9 @@ public class TestPageService extends AbstractTestPageService {
         assertEquals("foo_edit_permission", state.getEditPermission());
         assertEquals("foo_factory_id", state.getFactoryId());
         assertEquals(true, state.getShowMaxWindow());
+
+        assertEquals(Collections.singletonList("foo-add-application-permissions"), state.getAddApplicationPermissions());
+        assertEquals(Collections.singletonList("foo-add-container-permissions"), state.getAddContainerPermissions());
     }
 
     public void testLoadPages() {
@@ -87,7 +94,9 @@ public class TestPageService extends AbstractTestPageService {
         fooAttrs.setValue(MappedAttributes.FACTORY_ID, "foo_factory_id");
         fooAttrs.setValue(MappedAttributes.SHOW_MAX_WINDOW, true);
 
-        fail("implement add-container-permission and add-application-permission tests");
+        ProtectedContainer pc = foo.adapt(ProtectedContainer.class);
+        pc.setAddApplicationPermissions(Collections.singletonList("foo-add-application-permissions"));
+        pc.setAddContainerPermissions(Collections.singletonList("foo-add-container-permissions"));
 
         Page bar = mgr.getPOMService().getModel().getWorkspace().getSite(ObjectType.PORTAL_SITE, "load_pages").getRootPage()
                 .getChild("pages").addChild("bar");
@@ -100,6 +109,10 @@ public class TestPageService extends AbstractTestPageService {
         Attributes barAttrs = bar.getAttributes();
         barAttrs.setValue(MappedAttributes.FACTORY_ID, "bar_factory_id");
         barAttrs.setValue(MappedAttributes.SHOW_MAX_WINDOW, true);
+
+        pc = bar.adapt(ProtectedContainer.class);
+        pc.setAddApplicationPermissions(Collections.singletonList("bar-add-application-permissions"));
+        pc.setAddContainerPermissions(Collections.singletonList("bar-add-container-permissions"));
 
         sync(true);
 
@@ -122,6 +135,9 @@ public class TestPageService extends AbstractTestPageService {
         assertEquals("foo_edit_permission", state.getEditPermission());
         assertEquals("foo_factory_id", state.getFactoryId());
         assertEquals(true, state.getShowMaxWindow());
+        assertEquals(Collections.singletonList("foo-add-application-permissions"), state.getAddApplicationPermissions());
+        assertEquals(Collections.singletonList("foo-add-container-permissions"), state.getAddContainerPermissions());
+
 
         page = iterator.next();
         assertNotNull(page);
@@ -134,6 +150,9 @@ public class TestPageService extends AbstractTestPageService {
         assertEquals("bar_edit_permission", state.getEditPermission());
         assertEquals("bar_factory_id", state.getFactoryId());
         assertEquals(true, state.getShowMaxWindow());
+        assertEquals(Collections.singletonList("bar-add-application-permissions"), state.getAddApplicationPermissions());
+        assertEquals(Collections.singletonList("bar-add-container-permissions"), state.getAddContainerPermissions());
+
     }
 
     public void testCreate() {
@@ -147,7 +166,7 @@ public class TestPageService extends AbstractTestPageService {
         //
         PageContext page = new PageContext(site.page("foo"), new PageState("foo_name", "foo_description", true,
                 "foo_factory_id", Collections.singletonList("foo_access_permission"), "foo_edit_permission",
-                Collections.singletonList("foo_add_application_permission"), Collections.singletonList("foo_add_container_permission")));
+                Collections.singletonList("foo-add-application-permissions"), Collections.singletonList("foo-add-container-permissions")));
         assertTrue(service.savePage(page));
         sync(true);
 
@@ -164,12 +183,9 @@ public class TestPageService extends AbstractTestPageService {
         Attributes fooAttrs = foo.getAttributes();
         assertEquals("foo_factory_id", fooAttrs.getValue(MappedAttributes.FACTORY_ID));
         assertEquals(Boolean.TRUE, fooAttrs.getValue(MappedAttributes.SHOW_MAX_WINDOW));
-        ProtectedContainer ps = foo.adapt(ProtectedContainer.class);
-        assertEquals(Collections.singletonList("foo_add_application_permission"), ps.getAddApplicationPermissions());
-        assertEquals(Collections.singletonList("foo_add_container_permission"), ps.getAddContainerPermissions());
-
-
-        fail("implement add-container-permission and add-application-permission tests");
+        ProtectedContainer pc = foo.adapt(ProtectedContainer.class);
+        assertEquals(Collections.singletonList("foo-add-application-permissions"), pc.getAddApplicationPermissions());
+        assertEquals(Collections.singletonList("foo-add-container-permissions"), pc.getAddContainerPermissions());
     }
 
     public void testUpdate() {
@@ -184,11 +200,10 @@ public class TestPageService extends AbstractTestPageService {
         Attributes fooAttrs = foo.getAttributes();
         fooAttrs.setValue(MappedAttributes.FACTORY_ID, "foo_factory_id");
         fooAttrs.setValue(MappedAttributes.SHOW_MAX_WINDOW, true);
-        ProtectedContainer ps = foo.adapt(ProtectedContainer.class);
-        ps.setAddApplicationPermissions(Collections.singletonList("foo_add_application_permission"));
-        ps.setAddContainerPermissions(Collections.singletonList("foo_add_container_permission"));
+        ProtectedContainer pc = foo.adapt(ProtectedContainer.class);
+        pc.setAddApplicationPermissions(Collections.singletonList("foo-add-application-permissions"));
+        pc.setAddContainerPermissions(Collections.singletonList("foo-add-container-permissions"));
         sync(true);
-        fail("implement add-container-permission and add-application-permission tests");
 
         //
         SiteKey site = SiteKey.portal("update_page");
@@ -196,7 +211,8 @@ public class TestPageService extends AbstractTestPageService {
         //
         PageContext page = new PageContext(site.page("foo"), new PageState("foo_name_2", "foo_description_2", false,
                 "foo_factory_id_2", Arrays.asList("foo_access_permission_2", "foo_2_access_permission_2"),
-                "foo_edit_permission_2", Collections.singletonList("foo_add_application_permission_2"), Collections.singletonList("foo_add_container_permission_2")));
+                "foo_edit_permission_2", Collections.singletonList("foo-add-application-permissions-2"),
+                Collections.singletonList("foo-add-container-permissions-2")));
         assertFalse(service.savePage(page));
         sync(true);
 
@@ -213,9 +229,9 @@ public class TestPageService extends AbstractTestPageService {
         fooAttrs = foo.getAttributes();
         assertEquals("foo_factory_id_2", fooAttrs.getValue(MappedAttributes.FACTORY_ID));
         assertEquals(Boolean.FALSE, fooAttrs.getValue(MappedAttributes.SHOW_MAX_WINDOW));
-        ps = foo.adapt(ProtectedContainer.class);
-        assertEquals(Collections.singletonList("foo_add_application_permission_2"), ps.getAddApplicationPermissions());
-        assertEquals(Collections.singletonList("foo_add_container_permission_2"), ps.getAddContainerPermissions());
+        pc = foo.adapt(ProtectedContainer.class);
+        assertEquals(Collections.singletonList("foo-add-application-permissions-2"), pc.getAddApplicationPermissions());
+        assertEquals(Collections.singletonList("foo-add-container-permissions-2"), pc.getAddContainerPermissions());
 
     }
 
@@ -242,8 +258,11 @@ public class TestPageService extends AbstractTestPageService {
         Attributes fooAttrs = foo.getAttributes();
         fooAttrs.setValue(MappedAttributes.FACTORY_ID, "foo_factory_id");
         fooAttrs.setValue(MappedAttributes.SHOW_MAX_WINDOW, true);
+
+        ProtectedContainer pc = foo.adapt(ProtectedContainer.class);
+        pc.setAddApplicationPermissions(Collections.singletonList("foo-add-application-permissions"));
+        pc.setAddContainerPermissions(Collections.singletonList("foo-add-container-permissions"));
         sync(true);
-        fail("implement add-container-permission and add-application-permission tests");
 
         //
         assertTrue(service.destroyPage(site.page("foo")));
@@ -280,9 +299,11 @@ public class TestPageService extends AbstractTestPageService {
         Attributes fooAttrs = foo.getAttributes();
         fooAttrs.setValue(MappedAttributes.FACTORY_ID, "foo_factory_id");
         fooAttrs.setValue(MappedAttributes.SHOW_MAX_WINDOW, true);
+        ProtectedContainer pc = foo.adapt(ProtectedContainer.class);
+        pc.setAddApplicationPermissions(Collections.singletonList("foo-add-application-permissions"));
+        pc.setAddContainerPermissions(Collections.singletonList("foo-add-container-permissions"));
         sync(true);
 
-        fail("implement add-container-permission and add-application-permission tests");
 
         //
         SiteKey site = SiteKey.portal("clone_page");
@@ -295,10 +316,12 @@ public class TestPageService extends AbstractTestPageService {
         PageState state = bar.getState();
         assertEquals("foo_name", state.getDisplayName());
         assertEquals("foo_description", state.getDescription());
-        assertEquals(("foo_access_permission"), state.getAccessPermissions());
+        assertEquals(Collections.singletonList("foo_access_permission"), state.getAccessPermissions());
         assertEquals("foo_edit_permission", state.getEditPermission());
         assertEquals("foo_factory_id", state.getFactoryId());
         assertEquals(true, state.getShowMaxWindow());
+        assertEquals(Collections.singletonList("foo-add-application-permissions"), state.getAddApplicationPermissions());
+        assertEquals(Collections.singletonList("foo-add-container-permissions"), state.getAddContainerPermissions());
 
         //
         // DataStorage dataStorage = (DataStorage)PortalContainer.getInstance().getComponentInstanceOfType(DataStorage.class);

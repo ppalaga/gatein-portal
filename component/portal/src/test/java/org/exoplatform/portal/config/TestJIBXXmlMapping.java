@@ -67,7 +67,7 @@ public class TestJIBXXmlMapping extends AbstractGateInTest {
         UnmarshalledObject<PageSet> obj = ModelUnmarshaller.unmarshall(PageSet.class, input);
         PageSet pages = obj.getObject();
         assertNotNull(pages);
-        assertEquals(2, pages.getPages().size());
+        assertEquals(3, pages.getPages().size());
     }
 
     public void testPortalConfigMapping() throws Exception {

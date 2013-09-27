@@ -218,9 +218,14 @@ public class UIPortalComponentActionListener {
                 if (canMove(uiSource, uiTarget)) {
                     move(position, uiSource, uiTarget);
                 }
-            } else if (canMove(uiSource, uiTarget)) {
-                move(position, uiSource, uiTarget);
-                tidyUp(pcontext, uiSource);
+            } else {
+                if (canMove(uiSource, uiTarget)) {
+                    move(position, uiSource, uiTarget);
+                    tidyUp(pcontext, uiSource);
+                } else {
+                    portalComposer.updateWorkspaceComponent();
+                    pcontext.ignoreAJAXUpdateOnPortlets(true);
+                }
             }
         }
 
