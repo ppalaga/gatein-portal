@@ -46,6 +46,11 @@ import org.exoplatform.services.security.MembershipEntry;
 public class UserACL {
     public static final String EVERYONE = "Everyone";
 
+    /**
+     * {@code "Nobody"} is equivalent to empty list of permissions.
+     */
+    public static final String NOBODY = "Nobody";
+
     protected static Log log = ExoLogger.getLogger("organization:UserACL");
 
     private static final Collection<MembershipEntry> NO_MEMBERSHIP = Collections.emptyList();

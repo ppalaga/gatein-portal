@@ -68,12 +68,12 @@
 
   <page>
     <name>add-component-test-page</name>
-    <add-application-permissions>*:/platform/page-add-application-permissions-1;*:/platform/page-add-application-permissions-2</add-application-permissions>
-    <add-container-permissions>*:/platform/page-add-container-permissions-1;*:/platform/page-add-container-permissions-2</add-container-permissions>
+    <move-apps-permissions>*:/platform/page-move-apps-permissions-1;*:/platform/page-move-apps-permissions-2</move-apps-permissions>
+    <move-containers-permissions>*:/platform/page-move-containers-permissions-1;*:/platform/page-move-containers-permissions-2</move-containers-permissions>
     <container>
       <name>add-component-test-container</name>
-      <add-application-permissions>*:/platform/container-add-application-permissions-1;*:/platform/container-add-application-permissions-2</add-application-permissions>
-      <add-container-permissions>*:/platform/container-add-container-permissions-1;*:/platform/container-add-container-permissions-2</add-container-permissions>
+      <move-apps-permissions>*:/platform/container-move-apps-permissions-1;*:/platform/container-move-apps-permissions-2</move-apps-permissions>
+      <move-containers-permissions>*:/platform/container-move-containers-permissions-1;*:/platform/container-move-containers-permissions-2</move-containers-permissions>
       <portlet-application>
         <portlet>
           <application-ref>web</application-ref>

@@ -381,18 +381,18 @@ public class TestMOP extends AbstractConfigTest {
         assertNotNull(testPortal);
 
         Container testLayout = testPortal.getPortalLayout();
-        /* There are no add-application-permissions or add-container-permissions in the underlying portal.xml file
+        /* There are no move-apps-permissions or move-containers-permissions in the underlying portal.xml file
          * therefore the defaults defined in binding.xml should made effective on import */
-        assertArrayEquals(new String[] {UserACL.EVERYONE}, testLayout.getAddApplicationPermissions());
-        assertArrayEquals(new String[] {UserACL.EVERYONE}, testLayout.getAddContainerPermissions());
+        assertArrayEquals(new String[] {UserACL.EVERYONE}, testLayout.getMoveAppsPermissions());
+        assertArrayEquals(new String[] {UserACL.EVERYONE}, testLayout.getMoveContainersPermissions());
 
-        /* In classic/portal.xml, we have set explicit <add-application-permissions>
-         * and <add-container-permissions> */
+        /* In classic/portal.xml, we have set explicit <move-apps-permissions>
+         * and <move-containers-permissions> */
         PortalConfig classicPortal = storage.getPortalConfig("classic");
         assertNotNull(classicPortal);
         Container classicLayout = classicPortal.getPortalLayout();
-        assertArrayEquals(new String[] {"classic-portal-add-application-permissions"}, classicLayout.getAddApplicationPermissions());
-        assertArrayEquals(new String[] {"classic-portal-add-container-permissions"}, classicLayout.getAddContainerPermissions());
+        assertArrayEquals(new String[] {"classic-portal-move-apps-permissions"}, classicLayout.getMoveAppsPermissions());
+        assertArrayEquals(new String[] {"classic-portal-move-containers-permissions"}, classicLayout.getMoveContainersPermissions());
 
 
         Site testSite = session.getWorkspace().getSite(ObjectType.PORTAL_SITE, "test");
@@ -400,22 +400,22 @@ public class TestMOP extends AbstractConfigTest {
         org.gatein.mop.api.workspace.Page layout = testSite.getRootNavigation().getTemplatized().getTemplate();
         /* layoutRoot corresponds to <portal-layout> in test/portal.xml */
         UIContainer layoutRoot = layout.getRootComponent();
-        /* There are no add-application-permissions or add-container-permissions in the underlying portal.xml file
+        /* There are no move-apps-permissions or move-containers-permissions in the underlying portal.xml file
          * therefore the defaults defined in binding.xml should made effective on import */
         assertTrue(layoutRoot.isAdapted(ProtectedContainer.class));
         ProtectedContainer pc = layoutRoot.adapt(ProtectedContainer.class);
-        assertEquals(Collections.singletonList(UserACL.EVERYONE), pc.getAddApplicationPermissions());
-        assertEquals(Collections.singletonList(UserACL.EVERYONE), pc.getAddContainerPermissions());
+        assertEquals(Collections.singletonList(UserACL.EVERYONE), pc.getMoveAppsPermissions());
+        assertEquals(Collections.singletonList(UserACL.EVERYONE), pc.getMoveContainersPermissions());
 
-        /* In classic/portal.xml, we have set explicit <add-application-permissions>
-         * and <add-container-permissions> */
+        /* In classic/portal.xml, we have set explicit <move-apps-permissions>
+         * and <move-containers-permissions> */
         Site classicSite = session.getWorkspace().getSite(ObjectType.PORTAL_SITE, "classic");
         assertNotNull(classicSite);
         UIContainer classicLayoutRoot = classicSite.getRootNavigation().getTemplatized().getTemplate().getRootComponent();
         assertTrue(classicLayoutRoot.isAdapted(ProtectedContainer.class));
         pc = classicLayoutRoot.adapt(ProtectedContainer.class);
-        assertEquals(Collections.singletonList("classic-portal-add-application-permissions"), pc.getAddApplicationPermissions());
-        assertEquals(Collections.singletonList("classic-portal-add-container-permissions"), pc.getAddContainerPermissions());
+        assertEquals(Collections.singletonList("classic-portal-move-apps-permissions"), pc.getMoveAppsPermissions());
+        assertEquals(Collections.singletonList("classic-portal-move-containers-permissions"), pc.getMoveContainersPermissions());
 
     }
 
@@ -426,32 +426,32 @@ public class TestMOP extends AbstractConfigTest {
         PageContext pageContext = pageService.loadPage(page.getPageKey());
         assertNotNull(pageContext);
 
-        /* There are no add-application-permissions or add-container-permissions in the underlying pages.xml file
+        /* There are no move-apps-permissions or move-containers-permissions in the underlying pages.xml file
          * for test1 page. Therefore, the defaults defined in binding.xml should made effective on import */
-        assertEquals(Collections.singletonList(UserACL.EVERYONE), pageContext.getState().getAddApplicationPermissions());
-        assertEquals(Collections.singletonList(UserACL.EVERYONE), pageContext.getState().getAddContainerPermissions());
+        assertEquals(Collections.singletonList(UserACL.EVERYONE), pageContext.getState().getMoveAppsPermissions());
+        assertEquals(Collections.singletonList(UserACL.EVERYONE), pageContext.getState().getMoveContainersPermissions());
 
-        /* In classic/pages.xml, we have set explicit <add-application-permissions>
-         * and <add-container-permissions> for add-component-test-page and some of its subcomponents */
+        /* In classic/pages.xml, we have set explicit <move-apps-permissions>
+         * and <move-containers-permissions> for add-component-test-page and some of its subcomponents */
         Page addComponentTestPage = storage.getPage("portal::classic::add-component-test-page");
         assertNotNull(addComponentTestPage);
         PageContext addComponentTestPageContext = pageService.loadPage(addComponentTestPage.getPageKey());
         assertEquals(
-                Arrays.asList("*:/platform/page-add-application-permissions-1", "*:/platform/page-add-application-permissions-2"),
-                addComponentTestPageContext.getState().getAddApplicationPermissions());
+                Arrays.asList("*:/platform/page-move-apps-permissions-1", "*:/platform/page-move-apps-permissions-2"),
+                addComponentTestPageContext.getState().getMoveAppsPermissions());
         assertEquals(
-                Arrays.asList("*:/platform/page-add-container-permissions-1", "*:/platform/page-add-container-permissions-2"),
-                addComponentTestPageContext.getState().getAddContainerPermissions());
+                Arrays.asList("*:/platform/page-move-containers-permissions-1", "*:/platform/page-move-containers-permissions-2"),
+                addComponentTestPageContext.getState().getMoveContainersPermissions());
 
         ModelObject addComponentTestContainer = addComponentTestPage.getChildren().get(0);
 
         assertTrue(addComponentTestContainer instanceof Container);
         assertArrayEquals(
-                new String[] {"*:/platform/container-add-application-permissions-1", "*:/platform/container-add-application-permissions-2"},
-                ((Container) addComponentTestContainer).getAddApplicationPermissions());
+                new String[] {"*:/platform/container-move-apps-permissions-1", "*:/platform/container-move-apps-permissions-2"},
+                ((Container) addComponentTestContainer).getMoveAppsPermissions());
         assertArrayEquals(
-                new String[] {"*:/platform/container-add-container-permissions-1", "*:/platform/container-add-container-permissions-2"},
-                ((Container) addComponentTestContainer).getAddContainerPermissions());
+                new String[] {"*:/platform/container-move-containers-permissions-1", "*:/platform/container-move-containers-permissions-2"},
+                ((Container) addComponentTestContainer).getMoveContainersPermissions());
 
         Site testPortal = session.getWorkspace().getSite(ObjectType.PORTAL_SITE, "test");
         org.gatein.mop.api.workspace.Page testRootPage = testPortal.getRootPage();
@@ -467,8 +467,8 @@ public class TestMOP extends AbstractConfigTest {
 
         assertTrue(testPage.isAdapted(ProtectedContainer.class));
         ProtectedContainer pc = testPage.adapt(ProtectedContainer.class);
-        assertEquals(Collections.singletonList(UserACL.EVERYONE), pc.getAddApplicationPermissions());
-        assertEquals(Collections.singletonList(UserACL.EVERYONE), pc.getAddContainerPermissions());
+        assertEquals(Collections.singletonList(UserACL.EVERYONE), pc.getMoveAppsPermissions());
+        assertEquals(Collections.singletonList(UserACL.EVERYONE), pc.getMoveContainersPermissions());
 
 
         Site classicPortal = session.getWorkspace().getSite(ObjectType.PORTAL_SITE, "classic");
@@ -477,18 +477,18 @@ public class TestMOP extends AbstractConfigTest {
 
         assertTrue(addComponentTestPageMop.isAdapted(ProtectedContainer.class));
         pc = addComponentTestPageMop.adapt(ProtectedContainer.class);
-        assertEquals(Arrays.asList("*:/platform/page-add-application-permissions-1",
-                "*:/platform/page-add-application-permissions-2"), pc.getAddApplicationPermissions());
-        assertEquals(Arrays.asList("*:/platform/page-add-container-permissions-1",
-                "*:/platform/page-add-container-permissions-2"), pc.getAddContainerPermissions());
+        assertEquals(Arrays.asList("*:/platform/page-move-apps-permissions-1",
+                "*:/platform/page-move-apps-permissions-2"), pc.getMoveAppsPermissions());
+        assertEquals(Arrays.asList("*:/platform/page-move-containers-permissions-1",
+                "*:/platform/page-move-containers-permissions-2"), pc.getMoveContainersPermissions());
 
         UIComponent addComponentTestContainerMop = addComponentTestPageMop.getRootComponent().getComponents().get(0);
         assertTrue(addComponentTestContainerMop.isAdapted(ProtectedContainer.class));
         pc = addComponentTestContainerMop.adapt(ProtectedContainer.class);
-        assertEquals(Arrays.asList("*:/platform/container-add-application-permissions-1",
-                "*:/platform/container-add-application-permissions-2"), pc.getAddApplicationPermissions());
-        assertEquals(Arrays.asList("*:/platform/container-add-container-permissions-1",
-                "*:/platform/container-add-container-permissions-2"), pc.getAddContainerPermissions());
+        assertEquals(Arrays.asList("*:/platform/container-move-apps-permissions-1",
+                "*:/platform/container-move-apps-permissions-2"), pc.getMoveAppsPermissions());
+        assertEquals(Arrays.asList("*:/platform/container-move-containers-permissions-1",
+                "*:/platform/container-move-containers-permissions-2"), pc.getMoveContainersPermissions());
 
     }
 }

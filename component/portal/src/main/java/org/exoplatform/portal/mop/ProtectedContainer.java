@@ -36,16 +36,16 @@ import org.chromattic.api.annotations.Property;
 public abstract class ProtectedContainer {
 
     public static final String EVERYONE = "Everyone";
-    public static final List<String> DEFAULT_ADD_APPLICATION_PERMISSIONS = Collections.singletonList(EVERYONE);
-    public static final List<String> DEFAULT_ADD_CONTAINER_PERMISSIONS = Collections.singletonList(EVERYONE);
+    public static final List<String> DEFAULT_MOVE_APPLICATIONS_PERMISSIONS = Collections.singletonList(EVERYONE);
+    public static final List<String> DEFAULT_MOVE_CONTAINERS_PERMISSIONS = Collections.singletonList(EVERYONE);
 
-    @Property(name = "gtn:add-application-permissions")
-    public abstract List<String> getAddApplicationPermissions();
+    @Property(name = "gtn:move-apps-permissions")
+    public abstract List<String> getMoveAppsPermissions();
 
-    public abstract void setAddApplicationPermissions(List<String> permissions);
+    public abstract void setMoveAppsPermissions(List<String> permissions);
 
-    @Property(name = "gtn:add-container-permissions")
-    public abstract List<String> getAddContainerPermissions();
+    @Property(name = "gtn:move-containers-permissions")
+    public abstract List<String> getMoveContainersPermissions();
 
-    public abstract void setAddContainerPermissions(List<String> permissions);
+    public abstract void setMoveContainersPermissions(List<String> permissions);
 }

@@ -296,8 +296,8 @@ public class Mapper {
             ContainerData realSrcContainer = new ContainerData(dstContainer.getObjectId(), srcContainer.getId(),
                     srcContainer.getName(), srcContainer.getIcon(), srcContainer.getTemplate(), srcContainer.getFactoryId(),
                     srcContainer.getTitle(), srcContainer.getDescription(), srcContainer.getWidth(), srcContainer.getHeight(),
-                    srcContainer.getAccessPermissions(), srcContainer.getAddApplicationPermissions(),
-                    srcContainer.getAddContainerPermissions(), srcContainer.getChildren());
+                    srcContainer.getAccessPermissions(), srcContainer.getMoveAppsPermissions(),
+                    srcContainer.getMoveContainersPermissions(), srcContainer.getChildren());
 
             //
             save(realSrcContainer, dstContainer);
@@ -414,20 +414,20 @@ public class Mapper {
         String name = src.getName();
         List<ComponentData> children = loadChildren(src.getRootComponent());
 
-        List<String> addApplicationPermissions = null;
-        List<String> addContainerPermissions = null;
+        List<String> moveAppsPermissions = null;
+        List<String> moveContainersPermissions = null;
         if (src.isAdapted(ProtectedContainer.class)) {
             ProtectedContainer pc = src.adapt(ProtectedContainer.class);
-            addApplicationPermissions = pc.getAddApplicationPermissions();
-            addContainerPermissions = pc.getAddContainerPermissions();
+            moveAppsPermissions = pc.getMoveAppsPermissions();
+            moveContainersPermissions = pc.getMoveContainersPermissions();
         } else {
-            addApplicationPermissions = Collections.emptyList();
-            addContainerPermissions = Collections.emptyList();
+            moveAppsPermissions = Collections.emptyList();
+            moveContainersPermissions = Collections.emptyList();
         }
         //
         return new PageData(src.getObjectId(), null, name, null, null, null, null, null, null, null,
-                Collections.<String> emptyList(), children, ownerType, ownerId, null, false, addApplicationPermissions,
-                addContainerPermissions);
+                Collections.<String> emptyList(), children, ownerType, ownerId, null, false, moveAppsPermissions,
+                moveContainersPermissions);
     }
 
     private ContainerData load(UIContainer src, List<ComponentData> children) {
@@ -437,16 +437,16 @@ public class Mapper {
             ProtectedResource pr = src.adapt(ProtectedResource.class);
             accessPermissions = pr.getAccessPermissions();
         }
-        List<String> addApplicationPermissions = null;
-        List<String> addContainerPermissions = null;
+        List<String> moveAppsPermissions = null;
+        List<String> moveContainersPermissions = null;
         if (src.isAdapted(ProtectedContainer.class)) {
             ProtectedContainer pc = src.adapt(ProtectedContainer.class);
-            addApplicationPermissions = pc.getAddApplicationPermissions();
-            addContainerPermissions = pc.getAddContainerPermissions();
+            moveAppsPermissions = pc.getMoveAppsPermissions();
+            moveContainersPermissions = pc.getMoveContainersPermissions();
         } else {
             /* legacy mode */
-            addApplicationPermissions = ProtectedContainer.DEFAULT_ADD_APPLICATION_PERMISSIONS;
-            addContainerPermissions = ProtectedContainer.DEFAULT_ADD_CONTAINER_PERMISSIONS;
+            moveAppsPermissions = ProtectedContainer.DEFAULT_MOVE_APPLICATIONS_PERMISSIONS;
+            moveContainersPermissions = ProtectedContainer.DEFAULT_MOVE_CONTAINERS_PERMISSIONS;
         }
 
         //
@@ -457,8 +457,8 @@ public class Mapper {
                 attrs.getValue(MappedAttributes.ICON), attrs.getValue(MappedAttributes.TEMPLATE),
                 attrs.getValue(MappedAttributes.FACTORY_ID), described.getName(), described.getDescription(),
                 attrs.getValue(MappedAttributes.WIDTH), attrs.getValue(MappedAttributes.HEIGHT),
-                Utils.safeImmutableList(accessPermissions), Utils.safeImmutableList(addApplicationPermissions),
-                Utils.safeImmutableList(addContainerPermissions), children);
+                Utils.safeImmutableList(accessPermissions), Utils.safeImmutableList(moveAppsPermissions),
+                Utils.safeImmutableList(moveContainersPermissions), children);
     }
 
     private List<ComponentData> loadChildren(UIContainer src) {
@@ -545,8 +545,8 @@ public class Mapper {
         // so it's likely the best fix we can do at the moment
         PageData src2 = new PageData(rootContainer.getObjectId(), src.getId(), src.getName(), src.getIcon(), src.getTemplate(),
                 null, null, null, src.getWidth(), src.getHeight(), Collections.<String> emptyList(), src.getChildren(),
-                src.getOwnerType(), src.getOwnerId(), null, false, src.getAddApplicationPermissions(),
-                src.getAddContainerPermissions());
+                src.getOwnerType(), src.getOwnerId(), null, false, src.getMoveAppsPermissions(),
+                src.getMoveContainersPermissions());
 
         //
         LinkedList<ModelChange> childrenChanges = saveChildren(src2, rootContainer);
@@ -564,8 +564,8 @@ public class Mapper {
         pr.setAccessPermissions(src.getAccessPermissions());
 
         ProtectedContainer pc = dst.adapt(ProtectedContainer.class);
-        pc.setAddApplicationPermissions(src.getAddApplicationPermissions());
-        pc.setAddContainerPermissions(src.getAddContainerPermissions());
+        pc.setMoveAppsPermissions(src.getMoveAppsPermissions());
+        pc.setMoveContainersPermissions(src.getMoveContainersPermissions());
 
         Described described = dst.adapt(Described.class);
         described.setName(src.getTitle());
@@ -696,7 +696,7 @@ public class Mapper {
 
                         data = new DashboardData(data.getStorageId(), data.getId(), data.getName(), icon, data.getTemplate(),
                                 data.getFactoryId(), title, description, width, height, app.getAccessPermissions(),
-                                data.getAddApplicationPermissions(), data.getAddContainerPermissions(), data.getChildren());
+                                data.getMoveAppsPermissions(), data.getMoveContainersPermissions(), data.getChildren());
 
                         //
                         srcChild = data;
@@ -986,15 +986,15 @@ public class Mapper {
             accessPermissions = pr.getAccessPermissions();
         }
 
-        List<String> addApplicationPermissions = null;
-        List<String> addContainerPermissions = null;
+        List<String> moveAppsPermissions = null;
+        List<String> moveContainersPermissions = null;
         if (container.isAdapted(ProtectedContainer.class)) {
             ProtectedContainer pc = container.adapt(ProtectedContainer.class);
-            addApplicationPermissions = pc.getAddApplicationPermissions();
-            addContainerPermissions = pc.getAddContainerPermissions();
+            moveAppsPermissions = pc.getMoveAppsPermissions();
+            moveContainersPermissions = pc.getMoveContainersPermissions();
         } else {
-            addApplicationPermissions = Collections.emptyList();
-            addContainerPermissions = Collections.emptyList();
+            moveAppsPermissions = Collections.emptyList();
+            moveContainersPermissions = Collections.emptyList();
         }
 
         //
@@ -1007,7 +1007,7 @@ public class Mapper {
                 attrs.getValue(MappedAttributes.NAME), attrs.getValue(MappedAttributes.ICON),
                 attrs.getValue(MappedAttributes.TEMPLATE), attrs.getValue(MappedAttributes.FACTORY_ID), described.getName(),
                 described.getDescription(), attrs.getValue(MappedAttributes.WIDTH), attrs.getValue(MappedAttributes.HEIGHT),
-                Utils.safeImmutableList(accessPermissions), addApplicationPermissions, addContainerPermissions, children);
+                Utils.safeImmutableList(accessPermissions), moveAppsPermissions, moveContainersPermissions, children);
     }
 
     public void saveDashboard(DashboardData dashboard, UIContainer dst) {

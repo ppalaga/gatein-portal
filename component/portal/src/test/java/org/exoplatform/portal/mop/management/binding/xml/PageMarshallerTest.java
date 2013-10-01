@@ -379,15 +379,15 @@ public class PageMarshallerTest extends AbstractMarshallerTest {
 
         ContainerData containerData = new ContainerData(null, "cd-id", "cd-name", "cd-icon", "cd-template", "cd-factoryId",
                 "cd-title", "cd-description", "cd-width", "cd-height", Collections.singletonList("cd-access-permissions"),
-                Collections.singletonList("cd-add-application-permissions"),
-                Collections.singletonList("cd-add-container-permissions"),
+                Collections.singletonList("cd-move-apps-permissions"),
+                Collections.singletonList("cd-move-containers-permissions"),
                 Collections.singletonList((ComponentData) applicationData));
         List<ComponentData> children = Collections.singletonList((ComponentData) containerData);
 
         PageData expectedData = new PageData(null, null, "page-name", null, null, null, "Page Title", null, null, null,
                 Collections.singletonList("access-permissions"), children, "", "", "edit-permission", true,
-                Collections.singletonList("add-application-permissions"),
-                Collections.singletonList("add-container-permissions"));
+                Collections.singletonList("move-apps-permissions"),
+                Collections.singletonList("move-containers-permissions"));
 
         Page expected = new Page(expectedData);
 
@@ -425,8 +425,8 @@ public class PageMarshallerTest extends AbstractMarshallerTest {
         List<ComponentData> children = Collections.singletonList((ComponentData) applicationData);
         PageData expectedData = new PageData(null, null, "page-name", null, null, null, "Page Title", null, null, null,
                 Collections.singletonList("access-permissions"), children, "", "", "edit-permission", true,
-                Collections.singletonList("add-application-permissions"),
-                Collections.singletonList("add-container-permissions"));
+                Collections.singletonList("move-apps-permissions"),
+                Collections.singletonList("move-containers-permissions"));
 
         Page expected = new Page(expectedData);
 

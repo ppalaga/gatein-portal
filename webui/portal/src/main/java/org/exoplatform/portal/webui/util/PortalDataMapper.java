@@ -98,8 +98,8 @@ public class PortalDataMapper {
         model.setTemplate(uiContainer.getTemplate());
         model.setFactoryId(uiContainer.getFactoryId());
         model.setAccessPermissions(uiContainer.getAccessPermissions());
-        model.setAddApplicationPermissions(uiContainer.getAddApplicationPermissions());
-        model.setAddContainerPermissions(uiContainer.getAddContainerPermissions());
+        model.setMoveAppsPermissions(uiContainer.getMoveAppsPermissions());
+        model.setMoveContainersPermissions(uiContainer.getMoveContainersPermissions());
 
         List<UIComponent> uiChildren = uiContainer.getChildren();
         if (uiChildren == null)
@@ -270,8 +270,8 @@ public class PortalDataMapper {
         if (model.getAccessPermissions() != null) {
             uiContainer.setAccessPermissions(model.getAccessPermissions());
         }
-        uiContainer.setAddApplicationPermissions(model.getAddApplicationPermissions());
-        uiContainer.setAddContainerPermissions(model.getAddContainerPermissions());
+        uiContainer.setMoveAppsPermissions(model.getMoveAppsPermissions());
+        uiContainer.setMoveContainersPermissions(model.getMoveContainersPermissions());
 
         List<ModelObject> children = model.getChildren();
         if (children == null)

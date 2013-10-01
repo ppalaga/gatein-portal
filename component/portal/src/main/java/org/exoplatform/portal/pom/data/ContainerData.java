@@ -59,16 +59,16 @@ public class ContainerData extends ComponentData {
     /** . */
     private final List<String> accessPermissions;
 
-    private final List<String> addApplicationPermissions;
+    private final List<String> moveAppsPermissions;
 
-    private final List<String> addContainerPermissions;
+    private final List<String> moveContainersPermissions;
 
     /** . */
     private final List<ComponentData> children;
 
     public ContainerData(String storageId, String id, String name, String icon, String template, String factoryId,
             String title, String description, String width, String height, List<String> accessPermissions,
-            List<String> addApplicationPermissions, List<String> addContainerPermissions,
+            List<String> moveAppsPermissions, List<String> moveContainersPermissions,
             List<ComponentData> children) {
         super(storageId, null);
 
@@ -83,8 +83,8 @@ public class ContainerData extends ComponentData {
         this.width = width;
         this.height = height;
         this.accessPermissions = accessPermissions;
-        this.addApplicationPermissions = addApplicationPermissions;
-        this.addContainerPermissions = addContainerPermissions;
+        this.moveAppsPermissions = moveAppsPermissions;
+        this.moveContainersPermissions = moveContainersPermissions;
         this.children = children;
     }
 
@@ -133,16 +133,16 @@ public class ContainerData extends ComponentData {
     }
 
     /**
-     * @return the addApplicationPermissions
+     * @return the moveAppsPermissions
      */
-    public List<String> getAddApplicationPermissions() {
-        return addApplicationPermissions;
+    public List<String> getMoveAppsPermissions() {
+        return moveAppsPermissions;
     }
 
     /**
-     * @return the addContainerPermissions
+     * @return the moveContainersPermissions
      */
-    public List<String> getAddContainerPermissions() {
-        return addContainerPermissions;
+    public List<String> getMoveContainersPermissions() {
+        return moveContainersPermissions;
     }
 }

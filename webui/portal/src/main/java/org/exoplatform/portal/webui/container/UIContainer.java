@@ -42,9 +42,9 @@ public class UIContainer extends UIPortalComponent {
 
     protected String description;
 
-    protected String[] addContainerPermissions;
+    protected String[] moveContainersPermissions;
 
-    protected String[] addApplicationPermissions;
+    protected String[] moveAppsPermissions;
 
     public UIContainer() {
     }
@@ -74,32 +74,32 @@ public class UIContainer extends UIPortalComponent {
     }
 
 
-    public String[] getAddContainerPermissions() {
-        return addContainerPermissions;
+    public String[] getMoveContainersPermissions() {
+        return moveContainersPermissions;
     }
 
-    public void setAddContainerPermissions(String[] addContainerPermissions) {
-        this.addContainerPermissions = addContainerPermissions;
+    public void setMoveContainersPermissions(String[] moveContainersPermissions) {
+        this.moveContainersPermissions = moveContainersPermissions;
     }
 
     public boolean hasAddContainerPermission() {
         ExoContainer exoContainer = ExoContainerContext.getCurrentContainer();
         UserACL acl = (UserACL) exoContainer.getComponentInstanceOfType(UserACL.class);
-        return acl.hasPermission(addContainerPermissions);
+        return acl.hasPermission(moveContainersPermissions);
     }
 
-    public String[] getAddApplicationPermissions() {
-        return addApplicationPermissions;
+    public String[] getMoveAppsPermissions() {
+        return moveAppsPermissions;
     }
 
-    public void setAddApplicationPermissions(String[] addApplicationPermissions) {
-        this.addApplicationPermissions = addApplicationPermissions;
+    public void setMoveAppsPermissions(String[] moveAppsPermissions) {
+        this.moveAppsPermissions = moveAppsPermissions;
     }
 
     public boolean hasAddApplicationPermission() {
         ExoContainer exoContainer = ExoContainerContext.getCurrentContainer();
         UserACL acl = (UserACL) exoContainer.getComponentInstanceOfType(UserACL.class);
-        return acl.hasPermission(addApplicationPermissions);
+        return acl.hasPermission(moveAppsPermissions);
     }
 
 }

@@ -36,7 +36,7 @@
 
 
   <portal-layout>
-    <!-- no add-application-permissions or add-container-permissions here as we want to test
+    <!-- no move-apps-permissions or move-containers-permissions here as we want to test
          the the behavior when they are missing. -->
     <portlet-application>
       <portlet>

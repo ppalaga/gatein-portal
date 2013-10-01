@@ -158,8 +158,8 @@ public class PageServiceImpl implements PageService {
             pr.setEditPermission(page.state.editPermission);
 
             ProtectedContainer dstPc = dst.adapt(ProtectedContainer.class);
-            dstPc.setAddApplicationPermissions(page.state.addApplicationPermissions);
-            dstPc.setAddContainerPermissions(page.state.addContainerPermissions);
+            dstPc.setMoveAppsPermissions(page.state.moveAppsPermissions);
+            dstPc.setMoveContainersPermissions(page.state.moveContainersPermissions);
 
             //
             Described described = dst.adapt(Described.class);
@@ -279,8 +279,8 @@ public class PageServiceImpl implements PageService {
         if (srcPage.isAdapted(ProtectedContainer.class)) {
             ProtectedContainer srcPc = srcPage.adapt(ProtectedContainer.class);
             ProtectedContainer dstPc = dstPage.adapt(ProtectedContainer.class);
-            dstPc.setAddApplicationPermissions(srcPc.getAddApplicationPermissions());
-            dstPc.setAddContainerPermissions(srcPc.getAddContainerPermissions());
+            dstPc.setMoveAppsPermissions(srcPc.getMoveAppsPermissions());
+            dstPc.setMoveContainersPermissions(srcPc.getMoveContainersPermissions());
         }
 
         // Need to clone page data structure as well
@@ -316,8 +316,8 @@ public class PageServiceImpl implements PageService {
             if (srcChild.isAdapted(ProtectedContainer.class)) {
                 ProtectedContainer srcPc = srcPage.adapt(ProtectedContainer.class);
                 ProtectedContainer dstPc = dstPage.adapt(ProtectedContainer.class);
-                dstPc.setAddApplicationPermissions(srcPc.getAddApplicationPermissions());
-                dstPc.setAddContainerPermissions(srcPc.getAddContainerPermissions());
+                dstPc.setMoveAppsPermissions(srcPc.getMoveAppsPermissions());
+                dstPc.setMoveContainersPermissions(srcPc.getMoveContainersPermissions());
             }
 
 

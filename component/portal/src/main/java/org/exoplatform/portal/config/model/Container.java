@@ -56,9 +56,9 @@ public class Container extends ModelObject {
 
     protected String[] accessPermissions;
 
-    protected String[] addApplicationPermissions;
+    protected String[] moveAppsPermissions;
 
-    protected String[] addContainerPermissions;
+    protected String[] moveContainersPermissions;
 
     protected ArrayList<ModelObject> children;
 
@@ -93,10 +93,10 @@ public class Container extends ModelObject {
         this.width = data.getWidth();
         this.height = data.getHeight();
         this.accessPermissions = data.getAccessPermissions().toArray(new String[data.getAccessPermissions().size()]);
-        List<String> permisssions = data.getAddApplicationPermissions();
-        this.addApplicationPermissions = permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null;
-        permisssions = data.getAddContainerPermissions();
-        this.addContainerPermissions = permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null;
+        List<String> permisssions = data.getMoveAppsPermissions();
+        this.moveAppsPermissions = permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null;
+        permisssions = data.getMoveContainersPermissions();
+        this.moveContainersPermissions = permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null;
         this.children = children;
     }
 
@@ -189,20 +189,20 @@ public class Container extends ModelObject {
     }
 
 
-    public String[] getAddApplicationPermissions() {
-        return addApplicationPermissions;
+    public String[] getMoveAppsPermissions() {
+        return moveAppsPermissions;
     }
 
-    public void setAddApplicationPermissions(String[] addApplicationPermissions) {
-        this.addApplicationPermissions = addApplicationPermissions;
+    public void setMoveAppsPermissions(String[] moveAppsPermissions) {
+        this.moveAppsPermissions = moveAppsPermissions;
     }
 
-    public String[] getAddContainerPermissions() {
-        return addContainerPermissions;
+    public String[] getMoveContainersPermissions() {
+        return moveContainersPermissions;
     }
 
-    public void setAddContainerPermissions(String[] addContainerPermissions) {
-        this.addContainerPermissions = addContainerPermissions;
+    public void setMoveContainersPermissions(String[] moveContainersPermissions) {
+        this.moveContainersPermissions = moveContainersPermissions;
     }
 
     public String getDecorator() {
@@ -219,8 +219,8 @@ public class Container extends ModelObject {
     public ContainerData build() {
         List<ComponentData> children = buildChildren();
         return new ContainerData(storageId, id, name, icon, template, factoryId, title, description, width, height,
-                Utils.safeImmutableList(accessPermissions), Utils.safeImmutableList(addApplicationPermissions),
-                Utils.safeImmutableList(addContainerPermissions), children);
+                Utils.safeImmutableList(accessPermissions), Utils.safeImmutableList(moveAppsPermissions),
+                Utils.safeImmutableList(moveContainersPermissions), children);
     }
 
     protected List<ComponentData> buildChildren() {

@@ -46,7 +46,7 @@ public class Dashboard extends Container {
     public DashboardData build() {
         List<ComponentData> children = buildChildren();
         return new DashboardData(storageId, id, name, icon, template, factoryId, title, description, width, height,
-                Utils.safeImmutableList(accessPermissions), Utils.safeImmutableList(addApplicationPermissions),
-                Utils.safeImmutableList(addContainerPermissions), children);
+                Utils.safeImmutableList(accessPermissions), Utils.safeImmutableList(moveAppsPermissions),
+                Utils.safeImmutableList(moveContainersPermissions), children);
     }
 }

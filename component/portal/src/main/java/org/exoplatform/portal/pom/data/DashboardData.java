@@ -35,10 +35,10 @@ public class DashboardData extends ContainerData {
 
     public DashboardData(String storageId, String id, String name, String icon, String template, String factoryId,
             String title, String description, String width, String height, List<String> accessPermissions,
-            List<String> addApplicationPermissions, List<String> addContainerPermissions,
+            List<String> moveAppsPermissions, List<String> moveContainersPermissions,
             List<ComponentData> children) {
         super(storageId, id, name, icon, template, factoryId, title, description, width, height, accessPermissions,
-                addContainerPermissions, addContainerPermissions, children);
+                moveContainersPermissions, moveContainersPermissions, children);
     }
 
     /** . */

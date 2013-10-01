@@ -102,8 +102,8 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
 
         writeOptionalElement(writer, Element.FACTORY_ID, container.getFactoryId());
 
-        marshalPermissions(writer, Element.ADD_APPLICATION_PERMISSIONS, container.getAddApplicationPermissions());
-        marshalPermissions(writer, Element.ADD_CONTAINER_PERMISSIONS, container.getAddContainerPermissions());
+        marshalPermissions(writer, Element.MOVE_APPLICATIONS_PERMISSIONS, container.getMoveAppsPermissions());
+        marshalPermissions(writer, Element.MOVE_CONTAINERS_PERMISSIONS, container.getMoveContainersPermissions());
 
         List<ModelObject> children = container.getChildren();
         for (ModelObject child : children) {
@@ -143,12 +143,12 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
                     container.setAccessPermissions(unmarshalPermissions(navigator, false));
                     current = navigator.sibling();
                     break;
-                case ADD_APPLICATION_PERMISSIONS:
-                    container.setAddApplicationPermissions(unmarshalPermissions(navigator, false));
+                case MOVE_APPLICATIONS_PERMISSIONS:
+                    container.setMoveAppsPermissions(unmarshalPermissions(navigator, false));
                     current = navigator.sibling();
                     break;
-                case ADD_CONTAINER_PERMISSIONS:
-                    container.setAddContainerPermissions(unmarshalPermissions(navigator, false));
+                case MOVE_CONTAINERS_PERMISSIONS:
+                    container.setMoveContainersPermissions(unmarshalPermissions(navigator, false));
                     current = navigator.sibling();
                     break;
                 case FACTORY_ID:

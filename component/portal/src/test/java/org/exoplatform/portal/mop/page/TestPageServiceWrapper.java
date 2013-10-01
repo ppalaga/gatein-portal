@@ -93,8 +93,8 @@ public class TestPageServiceWrapper extends AbstractMOPTest {
 
         // Create
         PageContext page = new PageContext(key, new PageState("home", "description", true, null,
-                Collections.singletonList("foo"), "bar", Collections.singletonList("addApplicationPermissions"),
-                Collections.singletonList("addContainerPermissions")));
+                Collections.singletonList("foo"), "bar", Collections.singletonList("moveAppsPermissions"),
+                Collections.singletonList("moveContainersPermissions")));
         assertTrue(serviceWrapper.savePage(page));
         assertEquals(1, createListener.events.size());
         assertEquals(0, updateListener.events.size());
@@ -102,7 +102,7 @@ public class TestPageServiceWrapper extends AbstractMOPTest {
 
         // Update
         page.setState(new PageState("home2", "description2", false, null, Collections.singletonList("foo"), "bar", Collections
-                .singletonList("addApplicationPermissions"), Collections.singletonList("addContainerPermissions")));
+                .singletonList("moveAppsPermissions"), Collections.singletonList("moveContainersPermissions")));
         assertFalse(serviceWrapper.savePage(page));
         assertEquals(1, createListener.events.size());
         assertEquals(1, updateListener.events.size());
@@ -110,7 +110,7 @@ public class TestPageServiceWrapper extends AbstractMOPTest {
 
         // Destroy
         page.setState(new PageState("home2", "description2", false, null, Collections.singletonList("foo"), "bar", Collections
-                .singletonList("addApplicationPermissions"), Collections.singletonList("addContainerPermissions")));
+                .singletonList("moveAppsPermissions"), Collections.singletonList("moveContainersPermissions")));
         assertTrue(serviceWrapper.destroyPage(key));
         assertEquals(1, createListener.events.size());
         assertEquals(1, updateListener.events.size());

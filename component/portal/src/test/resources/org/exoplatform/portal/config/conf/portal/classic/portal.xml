@@ -29,8 +29,8 @@
   <access-permissions>Everyone</access-permissions>
   <edit-permission>*:/platform/administrators</edit-permission>
   <portal-layout>
-    <add-application-permissions>classic-portal-add-application-permissions</add-application-permissions>
-    <add-container-permissions>classic-portal-add-container-permissions</add-container-permissions>
+    <move-apps-permissions>classic-portal-move-apps-permissions</move-apps-permissions>
+    <move-containers-permissions>classic-portal-move-containers-permissions</move-containers-permissions>
     <portlet-application>
       <portlet>
         <application-ref>web</application-ref>

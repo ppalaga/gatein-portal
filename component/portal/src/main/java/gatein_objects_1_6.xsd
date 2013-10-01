@@ -131,8 +131,8 @@
 
   <xs:group name="containerChildrenGroup">
     <xs:sequence>
-      <xs:element name="add-application-permissions" type="xs:string" minOccurs="0" maxOccurs="1" default="Everyone"/>
-      <xs:element name="add-container-permissions" type="xs:string" minOccurs="0" maxOccurs="1" default="Everyone"/>
+      <xs:element name="move-apps-permissions" type="xs:string" minOccurs="0" maxOccurs="1" default="Everyone"/>
+      <xs:element name="move-containers-permissions" type="xs:string" minOccurs="0" maxOccurs="1" default="Everyone"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="portlet-application" type="portletApplicationType" minOccurs="1" maxOccurs="1"/>
         <xs:element name="gadget-application" type="gadgetApplicationType" minOccurs="1" maxOccurs="1"/>

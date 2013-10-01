@@ -95,11 +95,11 @@
 
   <nodeType name="gtn:protectedcontainer" isMixin="true" hasOrderableChildNodes="false" primaryItemName="">
     <propertyDefinitions>
-      <propertyDefinition name="gtn:add-application-permissions" requiredType="String" autoCreated="false" mandatory="false"
+      <propertyDefinition name="gtn:move-apps-permissions" requiredType="String" autoCreated="false" mandatory="false"
                           onParentVersion="COPY" protected="false" multiple="true">
         <valueConstraints/>
       </propertyDefinition>
-      <propertyDefinition name="gtn:add-container-permissions" requiredType="String" autoCreated="false" mandatory="false"
+      <propertyDefinition name="gtn:move-containers-permissions" requiredType="String" autoCreated="false" mandatory="false"
                           onParentVersion="COPY" protected="false" multiple="true">
         <valueConstraints/>
       </propertyDefinition>

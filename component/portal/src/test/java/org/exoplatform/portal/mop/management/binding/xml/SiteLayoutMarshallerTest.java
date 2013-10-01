@@ -174,7 +174,7 @@ public class SiteLayoutMarshallerTest extends AbstractMarshallerTest {
 
         ContainerData layout = new ContainerData(null, null, "container-name", "container-icon", "container-template",
                 "factoryId", "title", "description", "width", "height", Collections.singletonList("accessPermissions"),
-                Collections.singletonList("addApplicationPermissions"), Collections.singletonList("addContainerPermissions"),
+                Collections.singletonList("moveAppsPermissions"), Collections.singletonList("moveContainersPermissions"),
                 children);
 
         Map<String, String> properties = new HashMap<String, String>();
