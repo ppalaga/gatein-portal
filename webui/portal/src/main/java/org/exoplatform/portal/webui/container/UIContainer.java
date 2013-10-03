@@ -82,7 +82,7 @@ public class UIContainer extends UIPortalComponent {
         this.moveContainersPermissions = moveContainersPermissions;
     }
 
-    public boolean hasAddContainerPermission() {
+    public boolean hasMoveContainersPermission() {
         ExoContainer exoContainer = ExoContainerContext.getCurrentContainer();
         UserACL acl = (UserACL) exoContainer.getComponentInstanceOfType(UserACL.class);
         return acl.hasPermission(moveContainersPermissions);
@@ -96,7 +96,7 @@ public class UIContainer extends UIPortalComponent {
         this.moveAppsPermissions = moveAppsPermissions;
     }
 
-    public boolean hasAddApplicationPermission() {
+    public boolean hasMoveAppsPermission() {
         ExoContainer exoContainer = ExoContainerContext.getCurrentContainer();
         UserACL acl = (UserACL) exoContainer.getComponentInstanceOfType(UserACL.class);
         return acl.hasPermission(moveAppsPermissions);

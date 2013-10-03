@@ -329,9 +329,9 @@ public class UIPortalComponentActionListener {
             if (uiTarget instanceof org.exoplatform.portal.webui.container.UIContainer) {
                 org.exoplatform.portal.webui.container.UIContainer targetContainer = (org.exoplatform.portal.webui.container.UIContainer) uiTarget;
                 if (uiSource instanceof UIPortlet<?, ?>) {
-                    return targetContainer.hasAddApplicationPermission();
+                    return targetContainer.hasMoveAppsPermission();
                 } else if (uiSource instanceof org.exoplatform.portal.webui.container.UIContainer) {
-                    return targetContainer.hasAddContainerPermission();
+                    return targetContainer.hasMoveContainersPermission();
                 } else {
                     log.warn("Unexpected uiSource type '"+ uiSource.getClass().getName() +"'.");
                     return false;
