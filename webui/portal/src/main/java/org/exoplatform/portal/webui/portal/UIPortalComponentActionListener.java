@@ -62,6 +62,7 @@ import org.exoplatform.webui.event.EventListener;
 
 /** Author : Nhu Dinh Thuan nhudinhthuan@yahoo.com Jun 14, 2006 */
 public class UIPortalComponentActionListener {
+    private static Log log = ExoLogger.getLogger(UIPortalComponentActionListener.class);
     private static final String UI_PORTLET_PREFIX = "UIPortlet-";
 
     public static class ViewChildActionListener extends EventListener<UIContainer> {
@@ -95,6 +96,12 @@ public class UIPortalComponentActionListener {
                 return;
             }
 
+            org.exoplatform.portal.webui.container.UIContainer uiParent = uiComponentTobeRemoved.getParent();
+            if (!canMove(uiComponentTobeRemoved, (org.exoplatform.portal.webui.container.UIContainer) uiParent)) {
+                /* deletion not allowed */
+                return;
+            }
+
             UIPortalComposer portalComposer = uiApp.findFirstComponentOfType(UIPortalComposer.class);
             portalComposer.setEditted(true);
 
@@ -114,7 +121,6 @@ public class UIPortalComponentActionListener {
 
             PortalRequestContext pcontext = (PortalRequestContext) event.getRequestContext();
 
-            org.exoplatform.portal.webui.container.UIContainer uiParent = uiComponentTobeRemoved.getParent();
             if (UITabContainer.TAB_CONTAINER.equals(uiParent.getFactoryId())) {
                 /*
                  * Check if it is removing the last tab then we will remove the TabContainer as well
@@ -169,8 +175,24 @@ public class UIPortalComponentActionListener {
         module.require("SHARED/portalComposer", "portalComposer").addScripts("portalComposer.toggleSaveButton();");
     }
 
+
+    private static boolean canMove(UIComponent child, final UIContainer parent) {
+        if (parent instanceof org.exoplatform.portal.webui.container.UIContainer) {
+            org.exoplatform.portal.webui.container.UIContainer targetContainer = (org.exoplatform.portal.webui.container.UIContainer) parent;
+            if (child instanceof UIPortlet<?, ?>) {
+                return targetContainer.hasMoveAppsPermission();
+            } else if (child instanceof org.exoplatform.portal.webui.container.UIContainer) {
+                return targetContainer.hasMoveContainersPermission();
+            } else {
+                log.warn("Unexpected uiSource type '"+ child.getClass().getName() +"'.");
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
     public static class MoveChildActionListener extends EventListener<UIContainer> {
-        private static Log log = ExoLogger.getLogger(MoveChildActionListener.class);
 
         public void execute(Event<UIContainer> event) throws Exception {
             PortalRequestContext pcontext = (PortalRequestContext) event.getRequestContext();
@@ -323,22 +345,6 @@ public class UIPortalComponentActionListener {
                 uiSource = uiPortlet;
             }
             return uiSource;
-        }
-
-        private boolean canMove(UIComponent uiSource, final UIContainer uiTarget) {
-            if (uiTarget instanceof org.exoplatform.portal.webui.container.UIContainer) {
-                org.exoplatform.portal.webui.container.UIContainer targetContainer = (org.exoplatform.portal.webui.container.UIContainer) uiTarget;
-                if (uiSource instanceof UIPortlet<?, ?>) {
-                    return targetContainer.hasMoveAppsPermission();
-                } else if (uiSource instanceof org.exoplatform.portal.webui.container.UIContainer) {
-                    return targetContainer.hasMoveContainersPermission();
-                } else {
-                    log.warn("Unexpected uiSource type '"+ uiSource.getClass().getName() +"'.");
-                    return false;
-                }
-            } else {
-                return false;
-            }
         }
 
         /**

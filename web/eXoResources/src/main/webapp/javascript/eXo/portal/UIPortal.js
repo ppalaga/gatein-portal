@@ -146,6 +146,11 @@ eXo.portal.UIPortal = {
 
     if (isOver)
     {
+      var parent = this.findParentContainer(block);
+      if (!this.canMoveComponent(block, parent)) {
+        /* Nothing to do if the removal is not allowed. */
+        return;
+      }
       var newLayer = editBlock.find("div.NewLayer").eq(0);
       var height = 0;
       var width = 0;
@@ -310,7 +315,29 @@ eXo.portal.UIPortal = {
     {
       viewPage.css({"paddingTop" : "50px", "paddingRight" : "0px", "paddingBottom" : "50px", "paddingLeft" : "0px"});
     }
-  }
+  },
+  findParentContainer : function(componentElement) {
+      var jqStart = $(componentElement).parent();
+      var result = jqStart.closest(".UIContainer");
+      if (!result.length) {
+    	  result = jqStart.closest(".UIPage");
+      }
+      if (!result.length) {
+    	  result = jqStart.closest(".UIPortal");
+      }
+      return result.length ? result[0] : null;
+  },
+  canMoveComponent : function(componentElement, parentContainerElement) {
+      if (parentContainerElement) {
+        var jqParentContainerElement = $(parentContainerElement);
+        var jqElementIsContainer = $(componentElement).hasClass("UIContainer");
+        return (jqElementIsContainer && jqParentContainerElement.hasClass("HasMoveContainersPermissions"))
+            || (!jqElementIsContainer && jqParentContainerElement.hasClass("HasMoveAppsPermissions"));
+      }
+      else {
+        return false;
+      }
+    }
 };
 
 return {UIPortal : eXo.portal.UIPortal,
