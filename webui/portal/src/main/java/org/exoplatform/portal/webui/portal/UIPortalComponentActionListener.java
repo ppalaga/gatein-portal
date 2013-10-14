@@ -183,6 +183,9 @@ public class UIPortalComponentActionListener {
                 return targetContainer.hasMoveAppsPermission();
             } else if (child instanceof org.exoplatform.portal.webui.container.UIContainer) {
                 return targetContainer.hasMoveContainersPermission();
+            } else if (child instanceof org.exoplatform.portal.webui.page.UIPageBody) {
+                /* Allowed always to everyone */
+                return true;
             } else {
                 log.warn("Unexpected uiSource type '"+ child.getClass().getName() +"'.");
                 return false;
@@ -237,18 +240,14 @@ public class UIPortalComponentActionListener {
 
             if (uiSource == null) {
                 uiSource = prepareUiSource(newComponent, uiApp, portalComposer, sourceId, uiTarget);
-                if (canMove(uiSource, uiTarget)) {
-                    move(position, uiSource, uiTarget);
-                }
-            } else {
-                if (canMove(uiSource, uiTarget)) {
-                    move(position, uiSource, uiTarget);
-                    tidyUp(pcontext, uiSource);
-                } else {
-                    portalComposer.updateWorkspaceComponent();
-                    pcontext.ignoreAJAXUpdateOnPortlets(true);
-                }
             }
+            if (canMove(uiSource, uiTarget)) {
+                move(position, uiSource, uiTarget, pcontext);
+            } else {
+                portalComposer.updateWorkspaceComponent();
+                pcontext.ignoreAJAXUpdateOnPortlets(true);
+            }
+
         }
 
         /**
@@ -351,22 +350,28 @@ public class UIPortalComponentActionListener {
          * @param position
          * @param uiSource
          * @param uiTarget
+         * @param pcontext
          */
-        private void move(int position, UIComponent uiSource, final UIContainer uiTarget) {
+        private void move(int position, UIComponent uiSource, final UIContainer uiTarget, PortalRequestContext pcontext) {
             org.exoplatform.portal.webui.container.UIContainer uiParent = uiSource.getParent();
             List<UIComponent> children = uiTarget.getChildren();
             if (uiParent == uiTarget) {
                 int currentIdx = children.indexOf(uiSource);
-                if (position < currentIdx) {
+                if (position != currentIdx) {
                     children.remove(currentIdx);
-                    children.add(position, uiSource);
-                } else if (position > currentIdx) {
-                    children.add(position, uiSource);
-                    children.remove(currentIdx);
+                    if (position > children.size()) {
+                        children.add(uiSource);
+                    } else {
+                        children.add(position, uiSource);
+                    }
                 }
             } else {
+                boolean hadParent = uiSource.getParent() != null;
                 uiSource.setParent(uiTarget);
                 children.add(position, uiSource);
+                if (hadParent) {
+                    tidyUp(pcontext, uiSource);
+                }
             }
         }
     }

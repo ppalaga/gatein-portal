@@ -334,7 +334,8 @@ eXo.portal.UIPortal = {
         /* the second disjunct is for the case when componentElement is newly added from the palette */
         var jqElementIsContainer = jqComponentElement.hasClass("UIContainer")
                 || !!jqComponentElement.closest("#UIContainerList").length;
-        return (jqElementIsContainer && jqParentContainerElement.hasClass("HasMoveContainersPermissions"))
+        return jqComponentElement.hasClass("UIPageBody") // Everybody can move UIPageBody
+            || (jqElementIsContainer && jqParentContainerElement.hasClass("HasMoveContainersPermissions"))
             || (!jqElementIsContainer && jqParentContainerElement.hasClass("HasMoveAppsPermissions"));
       }
       else {
