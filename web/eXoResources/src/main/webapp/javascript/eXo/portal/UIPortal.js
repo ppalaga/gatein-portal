@@ -329,8 +329,11 @@ eXo.portal.UIPortal = {
   },
   canMoveComponent : function(componentElement, parentContainerElement) {
       if (parentContainerElement) {
+        var jqComponentElement = $(componentElement);
         var jqParentContainerElement = $(parentContainerElement);
-        var jqElementIsContainer = $(componentElement).hasClass("UIContainer");
+        /* the second disjunct is for the case when componentElement is newly added from the palette */
+        var jqElementIsContainer = jqComponentElement.hasClass("UIContainer")
+                || !!jqComponentElement.closest("#UIContainerList").length;
         return (jqElementIsContainer && jqParentContainerElement.hasClass("HasMoveContainersPermissions"))
             || (!jqElementIsContainer && jqParentContainerElement.hasClass("HasMoveAppsPermissions"));
       }
