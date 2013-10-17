@@ -335,8 +335,8 @@ eXo.portal.UIPortal = {
         var jqElementIsContainer = jqComponentElement.hasClass("UIContainer")
                 || !!jqComponentElement.closest("#UIContainerList").length;
         return jqComponentElement.hasClass("UIPageBody") // Everybody can move UIPageBody
-            || (jqElementIsContainer && jqParentContainerElement.hasClass("HasMoveContainersPermissions"))
-            || (!jqElementIsContainer && jqParentContainerElement.hasClass("HasMoveAppsPermissions"));
+            || (jqElementIsContainer && !jqParentContainerElement.hasClass("CannotMoveContainers"))
+            || (!jqElementIsContainer && !jqParentContainerElement.hasClass("CannotMoveApps"));
       }
       else {
         return false;

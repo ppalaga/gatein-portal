@@ -22,6 +22,8 @@
 
 package org.exoplatform.portal.mop.management.binding.xml;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -38,6 +40,7 @@ import org.exoplatform.portal.config.model.Container;
 import org.exoplatform.portal.config.model.ModelObject;
 import org.exoplatform.portal.config.model.Page;
 import org.exoplatform.portal.config.model.TransientApplicationState;
+import org.exoplatform.portal.mop.ProtectedResource;
 import org.exoplatform.portal.pom.config.Utils;
 import org.exoplatform.portal.pom.data.ApplicationData;
 import org.exoplatform.portal.pom.data.ComponentData;
@@ -359,6 +362,8 @@ public class PageMarshallerTest extends AbstractMarshallerTest {
         assertEquals("Empty", page.getTitle());
         assertNull(page.getAccessPermissions());
         assertNull(page.getEditPermission());
+        assertArrayEquals(new String [] {ProtectedResource.EVERYONE}, page.getMoveAppsPermissions());
+        assertArrayEquals(new String [] {ProtectedResource.EVERYONE}, page.getMoveContainersPermissions());
         assertNotNull(page.getChildren());
         assertTrue(page.getChildren().isEmpty());
     }

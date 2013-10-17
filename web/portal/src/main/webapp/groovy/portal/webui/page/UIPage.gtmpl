@@ -6,14 +6,7 @@
 	String permissionClasses = "";
 	if (uiPortalApp.isEditing())
 	{
-		StringBuilder permissionClassesBuilder = new StringBuilder();
-		if (uicomponent.hasMoveAppsPermission()) {
-			permissionClassesBuilder.append(" HasMoveAppsPermissions");
-		}
-		if (uicomponent.hasMoveContainersPermission()) {
-			permissionClassesBuilder.append(" HasMoveContainersPermissions");
-		}
-		permissionClasses = permissionClassesBuilder.toString();
+		permissionClasses = uicomponent.getPermissionClasses();
 	}
 %><div class="UIPage<%=permissionClasses%>" id="UIPage-${uicomponent.id}">
 	<div class="UIComponentBlock">

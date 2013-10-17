@@ -102,4 +102,18 @@ public class UIContainer extends UIPortalComponent {
         return acl.hasPermission(moveAppsPermissions);
     }
 
+    public String getPermissionClasses() {
+        StringBuilder permissionClasses = new StringBuilder();
+        if (!hasAccessPermission()) {
+            permissionClasses.append(" ProtectedContainer");
+        }
+        if (!hasMoveAppsPermission()) {
+            permissionClasses.append(" CannotMoveApps");
+        }
+        if (!hasMoveContainersPermission()) {
+            permissionClasses.append(" CannotMoveContainers");
+        }
+        return permissionClasses.toString();
+    }
+
 }

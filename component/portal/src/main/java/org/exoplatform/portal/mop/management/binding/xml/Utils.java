@@ -85,7 +85,7 @@ class Utils {
      * there is no change.
      *
      * @param array the array to tidy up
-     * @return A new array with empty strings and {@code null} elements removed or the innstance submitted over {@code array}
+     * @return A new array with empty strings and {@code null} elements removed or the instance submitted over {@code array}
      *         argument if there is no change necessary.
      */
     public static String[] tidyUp(String[] array) {

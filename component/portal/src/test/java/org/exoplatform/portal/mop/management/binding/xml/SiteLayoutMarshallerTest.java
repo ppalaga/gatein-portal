@@ -22,6 +22,8 @@
 
 package org.exoplatform.portal.mop.management.binding.xml;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -91,6 +93,8 @@ public class SiteLayoutMarshallerTest extends AbstractMarshallerTest {
         assertNull(layout.getWidth());
         assertNull(layout.getHeight());
         assertNull(layout.getAccessPermissions());
+        assertArrayEquals(new String[] {"*:/platform/app-movers"}, layout.getMoveAppsPermissions());
+        assertArrayEquals(new String[] {"*:/platform/container-movers"}, layout.getMoveContainersPermissions());
         List<ModelObject> children = data.getPortalLayout().getChildren();
         assertEquals(5, children.size());
 
@@ -185,6 +189,7 @@ public class SiteLayoutMarshallerTest extends AbstractMarshallerTest {
                 Collections.singletonList("access-permissions"), "edit-permissions", properties, "skin", layout, null);
 
         PortalConfig expected = new PortalConfig(expectedData);
+        Container expectedLayout = expected.getPortalLayout();
 
         SiteLayoutMarshaller marshaller = new SiteLayoutMarshaller();
         marshaller.marshal(expected, baos, false);
@@ -204,7 +209,10 @@ public class SiteLayoutMarshallerTest extends AbstractMarshallerTest {
         assertEquals("edit-permissions", actual.getEditPermission());
         assertEquals(properties, actual.getProperties());
         assertEquals("skin", actual.getSkin());
-        assertNotNull(actual.getPortalLayout());
+        Container actualLayout = actual.getPortalLayout();
+        assertNotNull(actualLayout);
+        assertArrayEquals(expectedLayout.getMoveAppsPermissions(), actualLayout.getMoveAppsPermissions());
+        assertArrayEquals(expectedLayout.getMoveContainersPermissions(), actualLayout.getMoveContainersPermissions());
         assertNotNull(actual.getPortalLayout().getChildren());
         assertEquals(2, actual.getPortalLayout().getChildren().size());
 
@@ -246,9 +254,12 @@ public class SiteLayoutMarshallerTest extends AbstractMarshallerTest {
 
         // Verify container w/ page-body
         Container container = (Container) layout.getChildren().get(3);
+        assertArrayEquals(new String[] {"*:/platform/app-movers"}, container.getMoveAppsPermissions());
+        assertArrayEquals(new String[] {"*:/platform/container-movers"}, container.getMoveContainersPermissions());
         assertNotNull(container.getChildren());
         assertEquals(2, container.getChildren().size());
-        PageBody body = (PageBody) ((Container) container.getChildren().get(0)).getChildren().get(0);
+        Container container0 = (Container) container.getChildren().get(0);
+        PageBody body = (PageBody) container0 .getChildren().get(0);
         assertNotNull(body);
     }
 

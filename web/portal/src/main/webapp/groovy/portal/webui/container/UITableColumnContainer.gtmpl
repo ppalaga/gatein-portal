@@ -19,23 +19,12 @@
 
 	if (uiPortalApp.isEditing())
 	{
-		StringBuilder permissionClasses = new StringBuilder();
-		if (!hasAccessPermission) {
-			permissionClasses.append(" ProtectedContainer");
-		}
-		if (uicomponent.hasMoveAppsPermission()) {
-			permissionClasses.append(" HasMoveAppsPermissions");
-		}
-		if (uicomponent.hasMoveContainersPermission()) {
-			permissionClasses.append(" HasMoveContainersPermissions");
-		}
-
 		JavascriptManager jsManager = rcontext.getJavascriptManager();
 			jsManager.require("SHARED/portal", "portal").require("SHARED/portalDragDrop", "portalDragDrop")
 						.addScripts("portalDragDrop.init(['UIContainer']);")
 						.addScripts("portal.UIPortal.initMouseHover('" + uicomponent.id + "');");
 %>
-<div class="UIContainer UITableColumnContainer EdittingContainer<%=permissionClasses%>"
+<div class="UIContainer UITableColumnContainer EdittingContainer<%=uicomponent.getPermissionClasses()%>"
 				id="${uicomponent.id}">
 <%
 	}

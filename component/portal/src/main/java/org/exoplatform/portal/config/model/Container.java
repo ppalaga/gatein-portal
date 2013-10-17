@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.exoplatform.portal.mop.ProtectedContainer;
 import org.exoplatform.portal.pom.config.Utils;
 import org.exoplatform.portal.pom.data.ComponentData;
 import org.exoplatform.portal.pom.data.ContainerData;
@@ -63,12 +64,13 @@ public class Container extends ModelObject {
     protected ArrayList<ModelObject> children;
 
     public Container() {
+        setDefaultPermissions();
         children = new ArrayList<ModelObject>();
     }
 
     public Container(String storageId) {
         super(storageId);
-
+        setDefaultPermissions();
         //
         this.children = new ArrayList<ModelObject>();
     }
@@ -98,6 +100,13 @@ public class Container extends ModelObject {
         permisssions = data.getMoveContainersPermissions();
         this.moveContainersPermissions = permisssions != null ? permisssions.toArray(new String[permisssions.size()]) : null;
         this.children = children;
+    }
+
+    private void setDefaultPermissions() {
+        List<String> permissions = ProtectedContainer.DEFAULT_MOVE_APPLICATIONS_PERMISSIONS;
+        this.moveAppsPermissions = permissions.toArray(new String[permissions.size()]);
+        permissions = ProtectedContainer.DEFAULT_MOVE_CONTAINERS_PERMISSIONS;
+        this.moveContainersPermissions = permissions.toArray(new String[permissions.size()]);
     }
 
     public String getId() {
