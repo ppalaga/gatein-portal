@@ -166,6 +166,8 @@ public class UIMainActionListener {
                     uiWorkingWS.setBackupUIPortal(currentPortal);
                     portalApp.setDefaultEditMode(ComponentTab.APPLICATIONS, getEditLevel());
 
+                    configurePortal(portalApp, transientPortal);
+
                     UIEditInlineWorkspace uiEditWS = uiWorkingWS.getChild(UIEditInlineWorkspace.class);
                     uiEditWS.setUIComponent(transientPortal);
                     UISiteBody siteBody = uiWorkingWS.findFirstComponentOfType(UISiteBody.class);
@@ -182,6 +184,13 @@ public class UIMainActionListener {
                     pcontext.ignoreAJAXUpdateOnPortlets(true);
                 }
             }
+        }
+
+
+        /**
+         * @param transientPortal
+         */
+        protected void configurePortal(UIPortalApplication portalApp, UIPortal transientPortal) {
         }
 
 
@@ -229,6 +238,18 @@ public class UIMainActionListener {
         @Override
         protected EditLevel getEditLevel() {
             return EditLevel.EDIT_PAGE;
+        }
+
+        /* (non-Javadoc)
+         * @see org.exoplatform.portal.webui.workspace.UIMainActionListener.EditInlineActionListener#adjustPortal(org.exoplatform.portal.webui.portal.UIPortal)
+         */
+        @Override
+        protected void configurePortal(UIPortalApplication portalApp, UIPortal transientPortal) {
+            int modeState = portalApp.getModeState();
+            if (modeState == UIPortalApplication.APP_BLOCK_EDIT_MODE
+                    || modeState == UIPortalApplication.CONTAINER_BLOCK_EDIT_MODE) {
+                transientPortal.setHeaderAndFooterRendered(false);
+            }
         }
 
     }
