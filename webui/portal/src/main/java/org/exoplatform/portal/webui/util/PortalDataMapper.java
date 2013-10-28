@@ -70,7 +70,7 @@ public class PortalDataMapper {
         } else if (uiComponent instanceof UIPage) {
             model = toPageModel((UIPage) uiComponent);
         } else if (uiComponent instanceof UIPortlet) {
-            model = toPortletModel((UIPortlet) uiComponent);
+            model = toPortletModel((UIPortlet<Object, ?>) uiComponent);
         } else if (uiComponent instanceof UIContainer) {
             model = toContainer((UIContainer) uiComponent);
         } else if (uiComponent instanceof UIGadget) {
@@ -317,7 +317,11 @@ public class PortalDataMapper {
         uiPortal.setProperties(model.getProperties());
         uiPortal.setRedirects(model.getPortalRedirects());
 
-        List<ModelObject> children = model.getPortalLayout().getChildren();
+
+        Container layout = model.getPortalLayout();
+        uiPortal.setMoveAppsPermissions(layout.getMoveAppsPermissions());
+        uiPortal.setMoveContainersPermissions(layout.getMoveContainersPermissions());
+        List<ModelObject> children = layout .getChildren();
         if (children != null) {
             for (Object child : children) {
                 buildUIContainer(uiPortal, child, false);

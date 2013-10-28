@@ -20,7 +20,6 @@
 package org.exoplatform.portal.webui.page;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.exoplatform.portal.application.PortalRequestContext;
