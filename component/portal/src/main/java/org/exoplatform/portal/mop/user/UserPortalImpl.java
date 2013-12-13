@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.exoplatform.portal.config.UserPortalConfigService;
+import org.exoplatform.portal.config.model.PageNavigation;
 import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.SiteType;
@@ -146,9 +147,9 @@ public class UserPortalImpl implements UserPortal {
                 // Sort the list finally
                 Collections.sort(navigations, new Comparator<UserNavigation>() {
                     public int compare(UserNavigation nav1, UserNavigation nav2) {
-                        if (nav1.getPriority() == -1) {
+                        if (nav1.getPriority() == PageNavigation.UNDEFINED_PRIORITY) {
                             return 1;
-                        } else if (nav2.getPriority() == -1) {
+                        } else if (nav2.getPriority() == PageNavigation.UNDEFINED_PRIORITY) {
                             return -1;
                         }
                         return nav1.getPriority() - nav2.getPriority();
