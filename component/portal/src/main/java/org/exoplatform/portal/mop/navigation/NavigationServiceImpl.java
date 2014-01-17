@@ -55,6 +55,8 @@ import org.gatein.mop.api.workspace.link.PageLink;
  */
 public class NavigationServiceImpl implements NavigationService {
 
+    public static final String CUSTOM_NODE_ATTRIBUTE_PREFIX = "cust-attr-";
+
     /** . */
     final POMSessionManager manager;
 
@@ -592,8 +594,9 @@ public class NavigationServiceImpl implements NavigationService {
             visible.setStartPublicationDate(state.getStartPublicationDate());
             visible.setEndPublicationDate(state.getEndPublicationDate());
 
-            //
+            // Sync the attributes
             Attributes attrs = sourceNav.getAttributes();
+            AttributesState.sync(state.getAttributesState(), CUSTOM_NODE_ATTRIBUTE_PREFIX, attrs);
             attrs.setValue(MappedAttributes.ICON, state.getIcon());
 
             //

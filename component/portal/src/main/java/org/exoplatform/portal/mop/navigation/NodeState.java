@@ -60,6 +60,9 @@ public final class NodeState implements Serializable {
         /** . */
         private PageKey pageRef;
 
+        /** . */
+        private AttributesState attributesState;
+
         public Builder() {
             this.icon = null;
             this.label = null;
@@ -67,6 +70,7 @@ public final class NodeState implements Serializable {
             this.endPublicationTime = -1;
             this.visibility = Visibility.DISPLAYED;
             this.pageRef = null;
+            this.attributesState = null;
         }
 
         /**
@@ -85,6 +89,7 @@ public final class NodeState implements Serializable {
             this.endPublicationTime = state.endPublicationTime;
             this.visibility = state.visibility;
             this.pageRef = state.pageRef;
+            this.attributesState = state.attributesState;
         }
 
         public Builder label(String label) {
@@ -117,8 +122,13 @@ public final class NodeState implements Serializable {
             return this;
         }
 
+        public Builder attributes(AttributesState attributes) {
+            this.attributesState = attributes;
+            return this;
+        }
+
         public NodeState build() {
-            return new NodeState(label, icon, startPublicationTime, endPublicationTime, visibility, pageRef);
+            return new NodeState(label, icon, startPublicationTime, endPublicationTime, visibility, pageRef, attributesState);
         }
     }
 
@@ -140,14 +150,18 @@ public final class NodeState implements Serializable {
     /** . */
     private final PageKey pageRef;
 
+    /** . */
+    private final AttributesState attributesState;
+
     public NodeState(String label, String icon, long startPublicationTime, long endPublicationTime, Visibility visibility,
-            PageKey pageRef) {
+            PageKey pageRef, AttributesState attributes) {
         this.label = label;
         this.icon = icon;
         this.startPublicationTime = startPublicationTime;
         this.endPublicationTime = endPublicationTime;
         this.visibility = visibility;
         this.pageRef = pageRef;
+        this.attributesState = attributes == null ? AttributesState.EMPTY : attributes;
     }
 
     public String getLabel() {
@@ -182,6 +196,10 @@ public final class NodeState implements Serializable {
         return pageRef;
     }
 
+    public AttributesState getAttributesState() {
+        return attributesState;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this) {
@@ -192,7 +210,7 @@ public final class NodeState implements Serializable {
             return Safe.equals(label, that.label) && Safe.equals(icon, that.icon)
                     && Safe.equals(startPublicationTime, that.startPublicationTime)
                     && Safe.equals(endPublicationTime, that.endPublicationTime) && Safe.equals(visibility, that.visibility)
-                    && Safe.equals(pageRef, that.pageRef);
+                    && Safe.equals(pageRef, that.pageRef) && Safe.equals(attributesState, that.attributesState);
         }
         return false;
     }
@@ -200,7 +218,8 @@ public final class NodeState implements Serializable {
     @Override
     public String toString() {
         return "NodeState[label=" + label + ",icon=" + icon + ",startPublicationTime=" + startPublicationTime
-                + ",endPublicationTime=" + endPublicationTime + ",visibility=" + visibility + ",pageRef=" + pageRef + "]";
+                + ",endPublicationTime=" + endPublicationTime + ",visibility=" + visibility + ",pageRef=" + pageRef
+                + ",attributes=" + attributesState + "]";
     }
 
     public Builder builder() {

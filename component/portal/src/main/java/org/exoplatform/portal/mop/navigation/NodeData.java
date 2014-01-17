@@ -106,11 +106,15 @@ class NodeData implements Serializable {
 
         //
         Attributes attrs = navigation.getAttributes();
+        AttributesState attributesState = new AttributesState.Builder()
+                .attributes(NavigationServiceImpl.CUSTOM_NODE_ATTRIBUTE_PREFIX, attrs)
+                .build();
 
         //
         NodeState state = new NodeState(label, attrs.getValue(MappedAttributes.ICON),
                 startPublicationDate != null ? startPublicationDate.getTime() : -1,
-                endPublicationDate != null ? endPublicationDate.getTime() : -1, visibility, pageRef);
+                endPublicationDate != null ? endPublicationDate.getTime() : -1, visibility, pageRef,
+                attributesState);
 
         //
         String parentId;
