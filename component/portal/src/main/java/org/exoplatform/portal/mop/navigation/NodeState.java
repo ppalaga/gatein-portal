@@ -20,11 +20,17 @@
 package org.exoplatform.portal.mop.navigation;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import org.exoplatform.commons.utils.Safe;
 import org.exoplatform.portal.mop.Visibility;
 import org.exoplatform.portal.mop.page.PageKey;
+import org.gatein.mop.api.Attributes;
+import org.gatein.mop.core.util.AbstractAttributes;
 
 /**
  * An immutable node state class.
@@ -60,6 +66,9 @@ public final class NodeState implements Serializable {
         /** . */
         private PageKey pageRef;
 
+        /** . */
+        private ImmutableAttributes attributes;
+
         public Builder() {
             this.icon = null;
             this.label = null;
@@ -67,6 +76,7 @@ public final class NodeState implements Serializable {
             this.endPublicationTime = -1;
             this.visibility = Visibility.DISPLAYED;
             this.pageRef = null;
+            this.attributes = null;
         }
 
         /**
@@ -85,6 +95,7 @@ public final class NodeState implements Serializable {
             this.endPublicationTime = state.endPublicationTime;
             this.visibility = state.visibility;
             this.pageRef = state.pageRef;
+            this.attributes = state.attributes;
         }
 
         public Builder label(String label) {
@@ -117,8 +128,177 @@ public final class NodeState implements Serializable {
             return this;
         }
 
+        public Builder attributes(ImmutableAttributes attributes) {
+            this.attributes = attributes;
+            return this;
+        }
+
         public NodeState build() {
-            return new NodeState(label, icon, startPublicationTime, endPublicationTime, visibility, pageRef);
+            return new NodeState(label, icon, startPublicationTime, endPublicationTime, visibility, pageRef, attributes);
+        }
+    }
+
+    /**
+     * TODO: A top level class in mop-core would probably be a better place for this. Needs to be
+     * consulted with Julien.
+     *
+     * An immutable implementation of {@link org.gatein.mop.api.Attributes}. The underlying
+     * {@link Map} is granted:
+     * <ol>
+     * <li>
+     * Not to be changed once the given {@link ImmutableAttributes} is created.
+     * <li>
+     * Not to be exposed to any code able to change it outside this class.
+     * </ol>
+     * <p>
+     * Note that no warranty can be given as for immutability of the attribute values.
+     * <p>
+     * How to create:
+     * <pre>ImmutableAttributes myAttributes = new ImmutableAttributes.Builder()
+     *         .attribute("key1", "value1")
+     *         .attribute("key2", "value2")
+     *         .build();</pre>
+     *
+     * @author <a href="mailto:ppalaga@redhat.com">Peter Palaga</a>
+     *
+     */
+    public static class ImmutableAttributes extends AbstractAttributes {
+
+        public static final ImmutableAttributes EMPTY = new ImmutableAttributes(Collections.<String, Object> emptyMap());
+
+        public static class Builder {
+
+            public Builder() {
+            }
+
+            public Builder(Attributes attributes) {
+                super();
+                attributes(attributes);
+            }
+
+            public Builder(Map<? extends String, ? extends Object> attributes) {
+                super();
+                attributes(attributes);
+            }
+
+            private Map<String, Object> map;
+
+            public Builder attribute(String key, Object value) {
+                if (value == null) {
+                    if (map != null) {
+                        /* here we follow what is in SimpleAttributes */
+                        map.remove(key);
+                    }
+                } else {
+                    if (map == null) {
+                        map = new HashMap<String, Object>();
+                    }
+                    map.put(key, value);
+                }
+                return this;
+            }
+
+            public Builder attributes(Map<? extends String, ? extends Object> attributes) {
+                if (attributes != null) {
+                    if (attributes.size() > 0) {
+                        if (map == null) {
+                            int attributesSize = attributes.size();
+                            map = new HashMap<String, Object>(attributesSize + attributesSize / 2);
+                        }
+                        for (Map.Entry<? extends String, ? extends Object> en : attributes.entrySet()) {
+                            if (en.getValue() == null) {
+                                /* here we follow what is in SimpleAttributes */
+                                map.remove(en.getKey());
+                            } else {
+                                map.put(en.getKey(), en.getValue());
+                            }
+
+                        }
+                    }
+                }
+                return this;
+            }
+
+            public Builder attributes(Attributes attributes) {
+                if (attributes != null) {
+                    Set<String> keys = attributes.getKeys();
+                    if (keys.size() > 0) {
+                        if (map == null) {
+                            int attributesSize = keys.size();
+                            map = new HashMap<String, Object>(attributesSize + attributesSize / 2);
+                        }
+                        for (String key : attributes.getKeys()) {
+                            Object value = attributes.getObject(key);
+                            if (value == null) {
+                                /* here we follow what is in SimpleAttributes */
+                                map.remove(key);
+                            } else {
+                                map.put(key, value);
+                            }
+
+                        }
+                    }
+                }
+                return this;
+            }
+
+            public ImmutableAttributes build() {
+                return new ImmutableAttributes(map);
+            }
+        }
+
+        private final Set<String> keys;
+        private final Map<String, Object> map;
+
+        /**
+         * @param map
+         */
+        private ImmutableAttributes(Map<String, Object> map) {
+            if (map == null) {
+                this.map = Collections.<String, Object> emptyMap();
+                this.keys = Collections.<String> emptySet();
+            } else {
+                this.map = map;
+                this.keys = Collections.unmodifiableSet(map.keySet());
+            }
+        }
+
+        @Override
+        public final Set<String> getKeys() {
+            return keys;
+        }
+
+        @Override
+        protected final void set(String name, Object o) {
+            throw new UnsupportedOperationException(this.getClass().getSimpleName()
+                    + " cannot be changed by design.");
+        }
+
+        @Override
+        public int hashCode() {
+            return map.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            } else if (obj == null) {
+                return false;
+            } else if (obj.getClass() == this.getClass()) {
+                ImmutableAttributes other = (ImmutableAttributes) obj;
+                return other.map == this.map || (other.map != null && other.map.equals(this.map));
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return map.toString();
+        }
+
+        protected Object get(String name) {
+            return map.get(name);
         }
     }
 
@@ -140,14 +320,18 @@ public final class NodeState implements Serializable {
     /** . */
     private final PageKey pageRef;
 
+    /** . */
+    private final ImmutableAttributes attributes;
+
     public NodeState(String label, String icon, long startPublicationTime, long endPublicationTime, Visibility visibility,
-            PageKey pageRef) {
+            PageKey pageRef, ImmutableAttributes attributes) {
         this.label = label;
         this.icon = icon;
         this.startPublicationTime = startPublicationTime;
         this.endPublicationTime = endPublicationTime;
         this.visibility = visibility;
         this.pageRef = pageRef;
+        this.attributes = attributes;
     }
 
     public String getLabel() {
@@ -182,6 +366,10 @@ public final class NodeState implements Serializable {
         return pageRef;
     }
 
+    public ImmutableAttributes getAttributes() {
+        return attributes;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this) {
@@ -192,7 +380,7 @@ public final class NodeState implements Serializable {
             return Safe.equals(label, that.label) && Safe.equals(icon, that.icon)
                     && Safe.equals(startPublicationTime, that.startPublicationTime)
                     && Safe.equals(endPublicationTime, that.endPublicationTime) && Safe.equals(visibility, that.visibility)
-                    && Safe.equals(pageRef, that.pageRef);
+                    && Safe.equals(pageRef, that.pageRef) && Safe.equals(attributes, that.attributes);
         }
         return false;
     }
@@ -200,7 +388,8 @@ public final class NodeState implements Serializable {
     @Override
     public String toString() {
         return "NodeState[label=" + label + ",icon=" + icon + ",startPublicationTime=" + startPublicationTime
-                + ",endPublicationTime=" + endPublicationTime + ",visibility=" + visibility + ",pageRef=" + pageRef + "]";
+                + ",endPublicationTime=" + endPublicationTime + ",visibility=" + visibility + ",pageRef=" + pageRef
+                + ",attributes=" + attributes + "]";
     }
 
     public Builder builder() {

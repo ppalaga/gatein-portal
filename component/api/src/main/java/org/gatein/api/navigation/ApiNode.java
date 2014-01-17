@@ -62,6 +62,7 @@ public class ApiNode implements Node {
     private String resolvedDisplayName;
     private String resolvedURI;
     private boolean displayNameChanged;
+    private NodeAttributes attributes;
 
     private final SiteId siteId;
 
@@ -202,6 +203,14 @@ public class ApiNode implements Node {
     @Override
     public Node getParent() {
         return context.getParentNode();
+    }
+
+    @Override
+    public NodeAttributes getAttributes() {
+        if (attributes == null) {
+            attributes = new ApiNodeAttributes(context);
+        }
+        return attributes;
     }
 
     @Override

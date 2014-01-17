@@ -36,6 +36,7 @@ import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.mop.Utils;
 import org.exoplatform.portal.mop.Visible;
+import org.exoplatform.portal.mop.navigation.NodeState.ImmutableAttributes;
 import org.exoplatform.portal.mop.page.PageKey;
 import org.exoplatform.portal.pom.config.POMSession;
 import org.exoplatform.portal.pom.config.POMSessionManager;
@@ -592,9 +593,21 @@ public class NavigationServiceImpl implements NavigationService {
             visible.setStartPublicationDate(state.getStartPublicationDate());
             visible.setEndPublicationDate(state.getEndPublicationDate());
 
-            //
+            // Sync the attributes
             Attributes attrs = sourceNav.getAttributes();
+            ImmutableAttributes newAttributes = state.getAttributes();
+            Set<String> newKeys = newAttributes.getKeys();
+            for (String key : newKeys) {
+                attrs.setObject(key, newAttributes.getObject(key));
+            }
+            for (String key : attrs.getKeys()) {
+                if (!newKeys.contains(key)) {
+                    attrs.setObject(key, null);
+                }
+            }
             attrs.setValue(MappedAttributes.ICON, state.getIcon());
+
+
 
             //
             source.data = new NodeData(sourceNav);

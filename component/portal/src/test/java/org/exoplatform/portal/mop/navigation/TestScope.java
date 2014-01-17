@@ -21,6 +21,7 @@ package org.exoplatform.portal.mop.navigation;
 
 import org.exoplatform.component.test.AbstractGateInTest;
 import org.exoplatform.portal.mop.Visibility;
+import org.exoplatform.portal.mop.navigation.NodeState.ImmutableAttributes;
 import org.exoplatform.portal.mop.page.PageKey;
 
 /**
@@ -30,7 +31,7 @@ import org.exoplatform.portal.mop.page.PageKey;
 public class TestScope extends AbstractGateInTest {
 
     public void testBranchShape() {
-        NodeState nodeState = new NodeState("", null, -1, -1, Visibility.DISPLAYED, PageKey.parse("portal::classic::home"));
+        NodeState nodeState = new NodeState("", null, -1, -1, Visibility.DISPLAYED, PageKey.parse("portal::classic::home"), ImmutableAttributes.EMPTY);
 
         //
         Scope scope0 = GenericScope.branchShape(new String[0], Scope.CHILDREN);
