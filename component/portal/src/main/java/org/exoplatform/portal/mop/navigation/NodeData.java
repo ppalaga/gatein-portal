@@ -110,7 +110,8 @@ class NodeData implements Serializable {
         //
         NodeState state = new NodeState(label, attrs.getValue(MappedAttributes.ICON),
                 startPublicationDate != null ? startPublicationDate.getTime() : -1,
-                endPublicationDate != null ? endPublicationDate.getTime() : -1, visibility, pageRef);
+                endPublicationDate != null ? endPublicationDate.getTime() : -1, visibility, pageRef,
+                        new NodeState.ImmutableAttributes.Builder().attributes(attrs).build());
 
         //
         String parentId;
