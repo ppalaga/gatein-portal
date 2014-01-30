@@ -22,28 +22,63 @@
 
 package org.gatein.api.page;
 
-import java.io.Serializable;
-
 import org.exoplatform.portal.mop.page.PageContext;
 import org.exoplatform.portal.mop.page.PageKey;
 import org.exoplatform.portal.mop.page.PageState;
+import org.gatein.api.Portal;
+import org.gatein.api.PortalImpl;
+import org.gatein.api.PortalRequest;
 import org.gatein.api.Util;
+import org.gatein.api.composition.Container;
+import org.gatein.api.composition.ContainerImpl;
+import org.gatein.api.composition.ContainerItem;
 import org.gatein.api.internal.Parameters;
 import org.gatein.api.security.Permission;
 import org.gatein.api.site.SiteId;
 
+import java.io.Serializable;
+import java.util.List;
+
 /**
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  */
-public class PageImpl implements Page, Serializable {
+public class PageImpl extends ContainerImpl implements Container, Page, Serializable {
     private PageKey key;
     private PageState state;
 
+    private String ownerType;
+    private String ownerId;
+
     private boolean create;
+    private String title;
+
+    private PortalImpl portal;
 
     public PageImpl(PageContext pageContext) {
         this.key = pageContext.getKey();
         this.state = pageContext.getState();
+    }
+
+    public PageImpl(PortalImpl portal, PageContext pageContext) {
+        this.portal = portal;
+        this.key = pageContext.getKey();
+        this.state = pageContext.getState();
+    }
+
+    @Override
+    public List<ContainerItem> getChildren() {
+        if (!isChildrenSet()) {
+            setChildren(portal.getPageRootContainer(getPageContext()));
+        }
+        return super.getChildren();
+    }
+
+    public PortalImpl getPortal() {
+        if (null == portal) {
+            portal = (PortalImpl) PortalRequest.getInstance().getPortal();
+        }
+
+        return portal;
     }
 
     @Override
@@ -133,5 +168,15 @@ public class PageImpl implements Page, Serializable {
 
     private void setState(PageState.Builder builder) {
         this.state = builder.build();
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public void setTitle(String title) {
+        this.title = title;
     }
 }
