@@ -22,8 +22,6 @@
 
 package org.gatein.api.page;
 
-import java.io.Serializable;
-
 import org.exoplatform.portal.mop.page.PageContext;
 import org.exoplatform.portal.mop.page.PageKey;
 import org.exoplatform.portal.mop.page.PageState;
@@ -32,14 +30,22 @@ import org.gatein.api.internal.Parameters;
 import org.gatein.api.security.Permission;
 import org.gatein.api.site.SiteId;
 
+import java.io.Serializable;
+
 /**
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  */
 public class PageImpl implements Page, Serializable {
     private PageKey key;
     private PageState state;
+    private Container container;
+
+    private String ownerType;
+    private String ownerId;
+
 
     private boolean create;
+    private String title;
 
     public PageImpl(PageContext pageContext) {
         this.key = pageContext.getKey();
@@ -133,5 +139,25 @@ public class PageImpl implements Page, Serializable {
 
     private void setState(PageState.Builder builder) {
         this.state = builder.build();
+    }
+
+    @Override
+    public Container getContainer() {
+        return container;
+    }
+
+    @Override
+    public void setContainer(Container container) {
+        this.container = container;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public void setTitle(String title) {
+        this.title = title;
     }
 }
