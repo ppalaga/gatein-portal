@@ -19,8 +19,6 @@
 
 package org.exoplatform.web.application.javascript;
 
-import javax.servlet.ServletContext;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -37,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.CompositeReader;
@@ -57,6 +57,8 @@ import org.gatein.portal.controller.resource.script.ScriptGraph;
 import org.gatein.portal.controller.resource.script.ScriptGroup;
 import org.gatein.portal.controller.resource.script.ScriptResource;
 import org.gatein.portal.controller.resource.script.ScriptResource.DepInfo;
+import org.gatein.portal.controller.resource.script.stat.StaticScriptResource;
+import org.gatein.portal.controller.resource.script.stat.StaticScriptResources;
 import org.gatein.wci.ServletContainerFactory;
 import org.gatein.wci.WebApp;
 import org.gatein.wci.WebAppListener;
@@ -71,6 +73,8 @@ public class JavascriptConfigService extends AbstractResourceService implements 
 
     /** The scripts. */
     final ScriptGraph scripts;
+
+    private final StaticScriptResources staticScriptResources;
 
     /** . */
     private final WebAppListener deployer;
@@ -95,6 +99,7 @@ public class JavascriptConfigService extends AbstractResourceService implements 
 
         //
         this.scripts = new ScriptGraph();
+        this.staticScriptResources = new StaticScriptResources();
         this.deployer = new JavascriptConfigDeployer(context.getPortalContainerName(), this);
     }
 
@@ -128,12 +133,17 @@ public class JavascriptConfigService extends AbstractResourceService implements 
                 //
                 boolean isModule = FetchMode.ON_LOAD.equals(resource.getFetchMode());
 
-                if (isModule) {
+                if (resource.isAmd()) {
+                    buffer.append("/* native AMD module */\n");
+                } else if (isModule) {
+                    Set<ResourceId> depResourceIds = resource.getDependencies();
+                    int argCount = depResourceIds.size();
                     JSONArray deps = new JSONArray();
+
                     LinkedList<String> params = new LinkedList<String>();
-                    List<String> argNames = new LinkedList<String>();
-                    List<String> argValues = new LinkedList<String>(params);
-                    for (ResourceId id : resource.getDependencies()) {
+                    List<String> argNames = new ArrayList<String>(argCount);
+                    List<String> argValues = new ArrayList<String>(argCount);
+                    for (ResourceId id : depResourceIds) {
                         ScriptResource dep = getResource(id);
                         if (dep != null) {
                             Set<DepInfo> depInfos = resource.getDepInfo(id);
@@ -182,7 +192,9 @@ public class JavascriptConfigService extends AbstractResourceService implements 
                     }
                 }
 
-                if (isModule) {
+                if (resource.isAmd()) {
+                    buffer.append("\n");
+                } else if (isModule) {
                     buffer.append("\n});");
                 } else {
                     buffer.append("\nif (typeof define === 'function' && define.amd && !require.specified('")
@@ -233,7 +245,19 @@ public class JavascriptConfigService extends AbstractResourceService implements 
         return scripts.resolve(ids);
     }
 
+    private String getSharedBaseUrl(ControllerContext controllerContext) throws Exception {
+        String result = buildURL(new ResourceId(ResourceScope.SHARED, "bootstrap"), controllerContext, null);
+        if (result != null && result.endsWith("/bootstrap")) {
+            return result.substring(0, result.length() - "/bootstrap".length());
+        } else {
+            return null;
+        }
+    }
+
     public JSONObject getJSConfig(ControllerContext controllerContext, Locale locale) throws Exception {
+
+        String sharedBaseUrl = getSharedBaseUrl(controllerContext);
+
         JSONObject paths = new JSONObject();
         JSONObject shim = new JSONObject();
 
@@ -271,6 +295,9 @@ public class JavascriptConfigService extends AbstractResourceService implements 
         }
 
         JSONObject config = new JSONObject();
+        if (sharedBaseUrl != null) {
+            config.put("baseUrl", sharedBaseUrl);
+        }
         config.put("paths", paths);
         config.put("shim", shim);
         return config;
@@ -453,5 +480,15 @@ public class JavascriptConfigService extends AbstractResourceService implements 
         public void close() throws IOException {
             sub.close();
         }
+    }
+
+    /**
+     * @param staticScriptResource
+     */
+    public void addStaticScriptResource(StaticScriptResource staticScriptResource) {
+        staticScriptResources.add(staticScriptResource);
+    }
+    public StaticScriptResource getStaticScriptResource(String resourcePath) {
+        return staticScriptResources.get(resourcePath);
     }
 }

@@ -66,6 +66,8 @@ public abstract class Module {
     /** . */
     protected int priority;
 
+    protected boolean isAmd = false;
+
     Module(ScriptResource resource, String contextPath, int priority) {
         this.resource = resource;
         this.contextPath = contextPath;
@@ -258,6 +260,14 @@ public abstract class Module {
 
     public int getPriority() {
         return priority;
+    }
+
+    public boolean isAmd() {
+        return isAmd;
+    }
+
+    public void setAmd(boolean isAmd) {
+        this.isAmd = isAmd;
     }
 
     /**
