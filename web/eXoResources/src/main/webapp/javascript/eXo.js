@@ -139,12 +139,16 @@ eXo.define = function() {
 	}
 
 	//eXo.define.names and eXo.define.deps are defined in GateIn JS wrapper
+	var fqModuleName = eXo.define.fqModuleName;
+	var fqDepNames = eXo.define.fqDepNames;
 	var ctxDepNames = eXo.define.names;
 	var ctxDeps = eXo.define.deps;
 
 	var deps = [];
 	for (var i = 0; i < reqList.length; i++) {
-		var idx = eXo.inArray(ctxDepNames, reqList[i]);
+		var resolvedReq = require.s.contexts._.makeModuleMap(reqList[i], {name: fqModuleName});
+		var idx = eXo.inArray(fqDepNames, resolvedReq.name);
+		//var idx = eXo.inArray(ctxDepNames, reqList[i]);
 		if (idx !== -1) {
 			deps[i] = ctxDeps[idx];
 		} else {

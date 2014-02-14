@@ -129,12 +129,17 @@ public class JavascriptConfigService extends AbstractResourceService implements 
                 boolean isModule = FetchMode.ON_LOAD.equals(resource.getFetchMode());
 
                 if (isModule) {
+                    Set<ResourceId> depResourceIds = resource.getDependencies();
+                    int argCount = depResourceIds.size();
                     JSONArray deps = new JSONArray();
+
                     LinkedList<String> params = new LinkedList<String>();
-                    List<String> argNames = new LinkedList<String>();
-                    List<String> argValues = new LinkedList<String>(params);
-                    for (ResourceId id : resource.getDependencies()) {
+                    List<String> fqDepNames = new ArrayList<String>(argCount);
+                    List<String> argNames = new ArrayList<String>(argCount);
+                    List<String> argValues = new ArrayList<String>(argCount);
+                    for (ResourceId id : depResourceIds) {
                         ScriptResource dep = getResource(id);
+                        fqDepNames.add(id.getName());
                         if (dep != null) {
                             Set<DepInfo> depInfos = resource.getDepInfo(id);
                             for (DepInfo info : depInfos) {
@@ -167,6 +172,8 @@ public class JavascriptConfigService extends AbstractResourceService implements 
                     buffer.append(", function(");
                     buffer.append(StringUtils.join(params, ","));
                     buffer.append(") {\nvar require = eXo.require, requirejs = eXo.require,define = eXo.define;");
+                    buffer.append("\neXo.define.fqModuleName='").append(resourceId.getName()).append("';");
+                    buffer.append("\neXo.define.fqDepNames=").append(new JSONArray(fqDepNames)).append(";");
                     buffer.append("\neXo.define.names=").append(new JSONArray(argNames)).append(";");
                     buffer.append("\neXo.define.deps=[").append(StringUtils.join(argValues, ",")).append("]").append(";");
                     buffer.append("\nreturn ");
