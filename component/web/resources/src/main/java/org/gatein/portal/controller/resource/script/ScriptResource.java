@@ -70,17 +70,20 @@ public class ScriptResource extends BaseScriptResource<ScriptResource> implement
     /** . */
     final ScriptGroup group;
 
+    final boolean amd;
+
     ScriptResource(ScriptGraph graph, ResourceId id, FetchMode fetchMode) {
-        this(graph, id, fetchMode, null, null);
+        this(graph, id, fetchMode, null, null, false);
     }
 
-    ScriptResource(ScriptGraph graph, ResourceId id, FetchMode fetchMode, String alias, ScriptGroup group) {
+    ScriptResource(ScriptGraph graph, ResourceId id, FetchMode fetchMode, String alias, ScriptGroup group, boolean amd) {
         super(graph, id);
 
         this.modules = new ArrayList<Module>();
         this.closure = new HashSet<ResourceId>();
         this.dependencies = new LinkedHashMap<ResourceId, Set<DepInfo>>();
         this.fetchMode = fetchMode;
+        this.amd = amd;
 
         if (alias == null) {
             String resName = id.getName();
@@ -155,7 +158,11 @@ public class ScriptResource extends BaseScriptResource<ScriptResource> implement
     }
 
     public Module.Local addLocalModule(String contextPath, Content[] contents, String resourceBundle, int priority) {
+        return addLocalModule(contextPath, contents, resourceBundle, priority, false);
+    }
+    public Module.Local addLocalModule(String contextPath, Content[] contents, String resourceBundle, int priority, boolean isAmd) {
         Module.Local module = new Module.Local(this, contextPath, contents, resourceBundle, priority);
+        module.setAmd(isAmd);
         modules.add(module);
         return module;
     }
@@ -223,6 +230,10 @@ public class ScriptResource extends BaseScriptResource<ScriptResource> implement
 
     public ScriptGroup getGroup() {
         return group;
+    }
+
+    public boolean isAmd() {
+        return amd;
     }
 
     public class DepInfo {

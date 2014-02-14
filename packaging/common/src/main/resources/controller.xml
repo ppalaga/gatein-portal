@@ -185,7 +185,7 @@
       <pattern>[^/]*</pattern>
     </path-param>
     <route path="/{gtn:resource}{gtn:lang}{gtn:compress}.js">
-      <path-param qname="gtn:resource">
+      <path-param qname="gtn:resource" encoding="preserve-path">
         <pattern>.+?</pattern>
       </path-param>
       <path-param qname="gtn:lang" capture-group="true">

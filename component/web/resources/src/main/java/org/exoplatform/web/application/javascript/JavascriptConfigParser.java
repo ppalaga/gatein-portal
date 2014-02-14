@@ -18,23 +18,28 @@
  */
 package org.exoplatform.web.application.javascript;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
+import org.codehaus.plexus.components.io.fileselectors.FileInfo;
+import org.codehaus.plexus.components.io.fileselectors.IncludeExcludeFileSelector;
 import org.exoplatform.commons.utils.I18N;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.web.application.javascript.Javascript.Remote;
 import org.gatein.common.xml.XMLTools;
 import org.gatein.portal.controller.resource.ResourceId;
 import org.gatein.portal.controller.resource.ResourceScope;
@@ -44,6 +49,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import com.google.javascript.rhino.TokenStream;
 
 /**
  * @author <a href="mailto:hoang281283@gmail.com">Minh Hoang TO</a>
@@ -107,30 +115,58 @@ public class JavascriptConfigParser {
     /** . */
     public static final String GROUP_TAG = "load-group";
 
+    public static final String AMD_TAG = "amd";
+
+    public static final String FILESET_TAG = "fileset";
+
+    public static final String DIRECTORY_TAG = "directory";
+    public static final String INCLUDES_TAG = "includes";
+    public static final String EXCLUDE_TAG = "exclude";
+    public static final String EXCLUDES_TAG = "excludes";
+
     /** . */
+    private final ServletContext servletContext;
     private final String contextPath;
+
+    private final Document document;
 
     private static final String SCRIPT_RESOURCE_DESCRIPTORS_ATTR = "gatein.script.resource.descriptors";
 
     private static final Log log = ExoLogger.getExoLogger(JavascriptConfigParser.class);
 
-    public JavascriptConfigParser(String contextPath) {
-        this.contextPath = contextPath;
+    private static final String[] PARSEABLE_SRIPT_TAGS = new String[] {JAVA_SCRIPT_TAG, MODULE_TAG, SCRIPTS_TAG, PORTLET_TAG, PORTAL_TAG};
+
+    private static final String[] AMD_FILE_EXTENSIONS = new String[] {".js"};
+
+    public JavascriptConfigParser(ServletContext servletContext, InputStream input) throws SAXException, IOException, ParserConfigurationException {
+        this.servletContext = servletContext;
+        this.contextPath = servletContext.getContextPath();
+        try {
+            DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            this.document = docBuilder.parse(input);
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (Exception ignored) {
+                }
+            }
+        }
     }
 
-    public static void processConfigResource(InputStream is, JavascriptConfigService service, ServletContext scontext) {
-        JavascriptConfigParser parser = new JavascriptConfigParser(scontext.getContextPath());
-        LinkedList<ScriptResourceDescriptor> descriptors = new LinkedList<ScriptResourceDescriptor>();
+    public static void processConfigResource(InputStream is, JavascriptConfigService service, ServletContext scontext) throws SAXException, IOException, ParserConfigurationException {
+        JavascriptConfigParser parser = new JavascriptConfigParser(scontext, is);
+        List<ScriptResourceDescriptor> descriptors = parser.parseScripts();
         JavascriptTask task = new JavascriptTask();
-        for (ScriptResourceDescriptor script : parser.parseConfig(is)) {
+        for (ScriptResourceDescriptor script : descriptors) {
             task.addDescriptor(script);
-            descriptors.add(script);
         }
         scontext.setAttribute(SCRIPT_RESOURCE_DESCRIPTORS_ATTR, Collections.unmodifiableList(descriptors));
         task.execute(service, scontext);
     }
 
     public static void unregisterResources(JavascriptConfigService service, ServletContext scontext) {
+        @SuppressWarnings("unchecked")
         List<ScriptResourceDescriptor> descriptors = (List<ScriptResourceDescriptor>) scontext.getAttribute(SCRIPT_RESOURCE_DESCRIPTORS_ATTR);
         if (descriptors == null)
             return;
@@ -143,29 +179,19 @@ public class JavascriptConfigParser {
         scontext.removeAttribute(SCRIPT_RESOURCE_DESCRIPTORS_ATTR);
     }
 
-    public List<ScriptResourceDescriptor> parseConfig(InputStream is) {
-        try {
-            DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document document = docBuilder.parse(is);
-            return parseScripts(document);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            return null;
-        }
-    }
-
-    private List<ScriptResourceDescriptor> parseScripts(Document document) {
-        List<ScriptResourceDescriptor> tasks = new ArrayList<ScriptResourceDescriptor>();
+    public List<ScriptResourceDescriptor> parseScripts() {
+        List<ScriptResourceDescriptor> result = new ArrayList<ScriptResourceDescriptor>();
         Element element = document.getDocumentElement();
-        for (String tagName : Arrays.asList(JAVA_SCRIPT_TAG, MODULE_TAG, SCRIPTS_TAG, PORTLET_TAG, PORTAL_TAG)) {
+        for (String tagName : PARSEABLE_SRIPT_TAGS) {
             for (Element childElt : XMLTools.getChildren(element, tagName)) {
-                Collection<ScriptResourceDescriptor> task = parseScripts(childElt);
-                if (task != null) {
-                    tasks.addAll(task);
+                Collection<ScriptResourceDescriptor> descriptors = parseScripts(childElt);
+                if (descriptors != null) {
+                    result.addAll(descriptors);
                 }
             }
         }
-        return tasks;
+        parseAmd(element, result);
+        return result;
     }
 
     private Collection<ScriptResourceDescriptor> parseScripts(Element element) {
@@ -247,7 +273,8 @@ public class JavascriptConfigParser {
             if (resourceElt != null) {
                 ScriptResourceDescriptor desc = scripts.get(id);
                 if (desc == null) {
-                    desc = new ScriptResourceDescriptor(id, fetchMode, parseOptString(element, AS_TAG), group);
+                    boolean isAmd = XMLTools.getUniqueChild(element, AMD_TAG, false) != null;
+                    desc = new ScriptResourceDescriptor(id, fetchMode, parseOptString(element, AS_TAG), group, isAmd);
                 } else {
                     desc.fetchMode = fetchMode;
                 }
@@ -271,9 +298,11 @@ public class JavascriptConfigParser {
 
             ScriptResourceDescriptor desc = scripts.get(id);
             if (desc == null) {
-                desc = new ScriptResourceDescriptor(id, fetchMode, parseOptString(element, AS_TAG), group);
+                boolean isAmd = XMLTools.getUniqueChild(element, AMD_TAG, false) != null;
+                desc = new ScriptResourceDescriptor(id, fetchMode, parseOptString(element, AS_TAG), group, isAmd);
             }
             parseDesc(element, desc);
+
             scripts.put(id, desc);
         } else {
             // ???
@@ -288,7 +317,8 @@ public class JavascriptConfigParser {
         if (urlElement != null) {
             String remoteURL = XMLTools.asString(urlElement);
             desc.id.setFullId(false);
-            desc.modules.add(new Javascript.Remote(desc.id, contextPath, remoteURL, 0));
+            Remote script = new Javascript.Remote(desc.id, contextPath, remoteURL, 0);
+            desc.modules.add(script);
         } else {
             for (Element localeElt : XMLTools.getChildren(element, "supported-locale")) {
                 String localeValue = XMLTools.asString(localeElt);
@@ -353,4 +383,211 @@ public class JavascriptConfigParser {
         Element childElt = XMLTools.getUniqueChild(element, childTag, false);
         return childElt == null ? null : XMLTools.asString(childElt, true);
     }
+
+    private String[] parseCludes(Element filesetElement, String cludesTag, String cludeTag) {
+        Element cludesElement = XMLTools.getUniqueChild(filesetElement, cludesTag, false);
+        if (cludesElement != null) {
+            List<Element> cludeElements = XMLTools.getChildren(cludesElement, cludeTag);
+            List<String> result = new ArrayList<String>(cludeElements.size());
+            for (Element cludeElement : cludeElements) {
+                result.add(XMLTools.asString(cludeElement, true));
+            }
+            return result.toArray(new String[result.size()]);
+        } else {
+            return null;
+        }
+
+    }
+
+    private void parseAmd(Element documentElement, List<ScriptResourceDescriptor> result) {
+        Element amd = XMLTools.getUniqueChild(documentElement, AMD_TAG, false);
+        if (amd != null) {
+            for (Element fileset : XMLTools.getChildren(amd, FILESET_TAG)) {
+                Element dirElement = XMLTools.getUniqueChild(fileset, DIRECTORY_TAG, true);
+                String dir = XMLTools.asString(dirElement, true);
+                if (dir.charAt(dir.length() - 1) != AmdResourceScanner.FILE_SEPARATOR) {
+                    dir = dir + '/';
+                }
+
+                String[] includes = parseCludes(fileset, INCLUDES_TAG, INCLUDE_TAG);
+                String[] excludes = parseCludes(fileset, EXCLUDES_TAG, EXCLUDE_TAG);
+                List<String> amdFiles = new AmdResourceScanner(dir, includes, excludes, AMD_FILE_EXTENSIONS, servletContext).scan();
+                for (String amdFile : amdFiles) {
+                    /* if dir is somethig like /js/amd and amdFile is something like /js/amd/package/mymodule.js
+                     * then fqModuleName will be package/mymodule */
+                    String fqModuleName = amdFile.substring(dir.length() + 1, amdFile.length() - 3);
+
+                    String alias = toModuleAlias(fqModuleName);
+                    ScriptResourceDescriptor d = new ScriptResourceDescriptor(
+                            new ResourceId(ResourceScope.SHARED, fqModuleName),
+                            FetchMode.ON_LOAD, alias, null, true);
+                    Javascript js = Javascript.create(
+                            new ResourceId(ResourceScope.SHARED, LEGACY_JAVA_SCRIPT),
+                            amdFile, contextPath, Integer.MAX_VALUE);
+                    d.modules.add(js);
+
+                    result.add(d);
+                }
+
+            }
+        }
+    }
+
+    private static String toModuleAlias(String fqModulePath) {
+        StringBuilder result = new StringBuilder(fqModulePath.length());
+        boolean nextUpper = false;
+        int len = fqModulePath.length();
+        for (int i = 0; i < len; i++) {
+            char ch = fqModulePath.charAt(i);
+            while (result.length() == 0 ? !Character.isJavaIdentifierStart(ch) : !Character.isJavaIdentifierPart(ch)) {
+                i++;
+                if (i >= len) {
+                    return result.toString();
+                }
+                ch = fqModulePath.charAt(i);
+                nextUpper = true;
+            }
+            result.append(nextUpper ? Character.toUpperCase(ch) : ch);
+            nextUpper = false;
+        }
+        String strResult = result.toString();
+        if (TokenStream.isKeyword(strResult)) {
+            return result.append('_').toString();
+        } else {
+            return strResult;
+        }
+    }
+
+
+    private static class AmdResourceScanner {
+
+        private static final char FILE_SEPARATOR = '/';
+        private final String directory;
+        private final ServletContext servletContext;
+        private final IncludeExcludeFileSelector selector;
+        private final String[] fileExtensions;
+
+        /**
+         * @param directory
+         * @param includes
+         * @param excludes
+         * @param servletContext
+         */
+        public AmdResourceScanner(String directory, String[] includes, String[] excludes, String[] fileExtensions, ServletContext servletContext) {
+            super();
+            IncludeExcludeFileSelector sel = new IncludeExcludeFileSelector();
+            sel.setIncludes(includes);
+            sel.setExcludes(excludes);
+            this.selector = sel;
+            this.fileExtensions = fileExtensions;
+            this.directory = directory;
+            this.servletContext = servletContext;
+        }
+
+        public List<String> scan() {
+            List<String> result = new ArrayList<String>();
+            return scanDirectory(directory, result);
+        }
+
+        /**
+         * @param directory
+         * @return
+         */
+        private List<String> scanDirectory(String directory, List<String> result) {
+            @SuppressWarnings("unchecked")
+            Set<String> paths = servletContext.getResourcePaths(directory);
+            if (paths != null && paths.size() > 0) {
+                for (String path : paths) {
+                    if (isDirectory(path)) {
+                        scanDirectory(path, result);
+                    } else if (matchesExtensions(path)) {
+                        String relName = path.substring(this.directory.length());
+                        FileInfo fileInfo = new SimpleFileInfo(relName, true);
+                        try {
+                            if (selector.isSelected(fileInfo)) {
+                                result.add(path);
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException("Could not filter path '"+ path +"'", e);
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        /**
+         * @param path
+         * @return
+         */
+        private boolean matchesExtensions(String path) {
+            for (String ext : fileExtensions) {
+                if (path.endsWith(ext)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * @param path
+         * @return
+         */
+        private boolean isDirectory(String path) {
+            return path.charAt(path.length() - 1) == FILE_SEPARATOR;
+        }
+
+    }
+
+    private static class SimpleFileInfo implements FileInfo {
+
+        /**
+         * @param name
+         * @param isFile
+         */
+        public SimpleFileInfo(String name, boolean isFile) {
+            super();
+            this.name = name;
+            this.isFile = isFile;
+        }
+
+        private final String name;
+        private final boolean isFile;
+
+        /**
+         * @see org.codehaus.plexus.components.io.fileselectors.FileInfo#getName()
+         */
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * Unsupported in this implementation. Always throws a {@link UnsupportedOperationException}.
+         *
+         * @see org.codehaus.plexus.components.io.fileselectors.FileInfo#getContents()
+         */
+        @Override
+        public InputStream getContents() throws IOException {
+            throw new UnsupportedOperationException("FileInfo.getContents() unsupported in "+ this.getClass().getName());
+        }
+
+        /**
+         * @see org.codehaus.plexus.components.io.fileselectors.FileInfo#isFile()
+         */
+        @Override
+        public boolean isFile() {
+            return isFile;
+        }
+
+        /**
+         * @see org.codehaus.plexus.components.io.fileselectors.FileInfo#isDirectory()
+         */
+        @Override
+        public boolean isDirectory() {
+            return !isFile;
+        }
+
+    }
+
 }

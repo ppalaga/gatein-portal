@@ -28,6 +28,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import javax.servlet.ServletContext;
 
@@ -269,12 +272,32 @@ public class TestJavascriptConfigService extends AbstractWebResourceTest {
         }
     }
 
-    private static class MockJSServletContext extends MockServletContext {
-        private Map<String, String> resources;
+    public static class MockJSServletContext extends MockServletContext {
+        protected Map<String, String> resources;
 
         public MockJSServletContext(String contextName, Map<String, String> resources) {
             super(contextName);
-            this.resources = resources;
+            this.resources = expandDirectories(resources);
+        }
+
+        /**
+         * @param resources2
+         * @return
+         */
+        private Map<String, String> expandDirectories(Map<String, String> resources) {
+            Map<String, String> result = new TreeMap<String, String>(resources);
+            for (String path : resources.keySet()) {
+                if (path.charAt(0) != '/') {
+                    throw new IllegalArgumentException("Resource path '"+ path +"' does not start with slash.");
+                }
+                for (int slashPos = path.indexOf('/', 1); slashPos >= 0; slashPos = path.indexOf('/', slashPos + 1)) {
+                    String parentPath = path.substring(0, slashPos + 1);
+                    if (!result.containsKey(parentPath)) {
+                        result.put(parentPath, null);
+                    }
+                }
+            }
+            return result;
         }
 
         public String getContextPath() {
@@ -290,5 +313,31 @@ public class TestJavascriptConfigService extends AbstractWebResourceTest {
                 return null;
             }
         }
+
+        /**
+         * @see org.exoplatform.test.mocks.servlet.MockServletContext#getResourcePaths(java.lang.String)
+         */
+        @Override
+        public Set<?> getResourcePaths(String prefix) {
+            if (!prefix.endsWith("/")) {
+                throw new IllegalArgumentException("Only prefixes ending with '/' are supported.");
+            }
+            Set<String> result = new TreeSet<String>();
+
+            for (String resourcePath : resources.keySet()) {
+                if (resourcePath.startsWith(prefix)) {
+
+                    int slashPos = resourcePath.indexOf('/', prefix.length());
+                    int restLength = resourcePath.length() - prefix.length();
+                    if (restLength > 0 && (slashPos < 0 || slashPos == resourcePath.length() - 1)) {
+                        /* a file residing directly under prefix directory
+                         * or a subdirectory of the prefix directory */
+                        result.add(resourcePath);
+                    }
+                }
+            }
+            return result.size() == 0 ? null : result;
+        }
+
     }
 }
