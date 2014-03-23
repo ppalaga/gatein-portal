@@ -18,7 +18,7 @@ import org.gatein.common.logging.LoggerFactory;
  */
 public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements ContainerBuilder<T> {
     private static final Logger log = LoggerFactory.getLogger(ContainerBuilderImpl.class);
-    private List<String> accessPermission;
+    private List<String> accessPermissions;
     private List<String> moveAppsPermissions;
     private List<String> moveContainersPermissions;
     private boolean childrenBuild = false;
@@ -200,8 +200,8 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
     }
 
     @Override
-    public ContainerBuilder<T> accessPermission(List<String> accessPermission) {
-        this.accessPermission = accessPermission;
+    public ContainerBuilder<T> accessPermissions(List<String> accessPermissions) {
+        this.accessPermissions = accessPermissions;
         return this;
     }
 
@@ -238,7 +238,7 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      * @return the complete container
      */
     protected Container completeContainer(Container container) {
-        container.setAccessPermissions(toStringArray(accessPermission));
+        container.setAccessPermissions(toStringArray(accessPermissions));
         container.setMoveContainersPermissions(toStringArray(moveContainersPermissions));
         container.setMoveAppsPermissions(toStringArray(moveAppsPermissions));
         return container;
