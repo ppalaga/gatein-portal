@@ -341,9 +341,9 @@ public class PortalImpl implements Portal {
 
         ContainerImpl container = new ContainerImpl(children);
         container.setTemplate(src.getTemplate());
-        container.setMoveAppsPermissions(src.getMoveAppsPermissions());
-        container.setMoveContainersPermissions(src.getMoveContainersPermissions());
-        container.setAccessPermissions(src.getAccessPermissions());
+        container.setMoveAppsPermission(Util.from(src.getMoveAppsPermissions()));
+        container.setMoveContainersPermission(Util.from(src.getMoveContainersPermissions()));
+        container.setAccessPermission(Util.from(src.getAccessPermissions()));
         return container;
     }
 
@@ -550,9 +550,9 @@ public class PortalImpl implements Portal {
                     // container at the storage level
                     org.exoplatform.portal.config.model.Container child = new org.exoplatform.portal.config.model.Container();
                     child.setTemplate(containerItemContainer.getTemplate());
-                    child.setAccessPermissions(containerItemContainer.getAccessPermissions());
-                    child.setMoveAppsPermissions(containerItemContainer.getMoveAppsPermissions());
-                    child.setMoveContainersPermissions(containerItemContainer.getMoveContainersPermissions());
+                    child.setAccessPermissions(Util.from(containerItemContainer.getAccessPermission()));
+                    child.setMoveAppsPermissions(Util.from(containerItemContainer.getMoveAppsPermission()));
+                    child.setMoveContainersPermissions(Util.from(containerItemContainer.getMoveContainersPermission()));
 
                     // recursive call, to convert all the children into model objects for this container
                     child.setChildren(getModelObjectsFor(containerItemContainer));

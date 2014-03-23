@@ -2,6 +2,8 @@ package org.gatein.api.composition;
 
 import java.util.List;
 
+import org.gatein.api.security.Permission;
+
 /**
  * Basic representation of a Container, as defined by the public API.
  *
@@ -13,9 +15,9 @@ public class ContainerImpl implements Container {
 
     private List<ContainerItem> children;
     private String template;
-    private String[] accessPermissions;
-    private String[] moveAppsPermissions;
-    private String[] moveContainersPermissions;
+    private Permission accessPermissions;
+    private Permission moveAppsPermissions;
+    private Permission moveContainersPermissions;
 
     public ContainerImpl() {
     }
@@ -55,33 +57,33 @@ public class ContainerImpl implements Container {
     }
 
     @Override
-    public String[] getAccessPermissions() {
+    public Permission getAccessPermission() {
         return accessPermissions;
     }
 
     @Override
-    public void setAccessPermissions(String[] accessPermissions) {
-        this.accessPermissions = accessPermissions;
+    public void setAccessPermission(Permission accessPermission) {
+        this.accessPermissions = accessPermission;
     }
 
     @Override
-    public String[] getMoveAppsPermissions() {
+    public Permission getMoveAppsPermission() {
         return moveAppsPermissions;
     }
 
     @Override
-    public void setMoveAppsPermissions(String[] moveAppsPermissions) {
-        this.moveAppsPermissions = moveAppsPermissions;
+    public void setMoveAppsPermission(Permission moveAppsPermission) {
+        this.moveAppsPermissions = moveAppsPermission;
     }
 
     @Override
-    public String[] getMoveContainersPermissions() {
+    public Permission getMoveContainersPermission() {
         return moveContainersPermissions;
     }
 
     @Override
-    public void setMoveContainersPermissions(String[] moveContainersPermissions) {
-        this.moveContainersPermissions = moveContainersPermissions;
+    public void setMoveContainersPermission(Permission moveContainersPermission) {
+        this.moveContainersPermissions = moveContainersPermission;
     }
 
     public boolean isChildrenSet() {

@@ -3,6 +3,7 @@ package org.gatein.api.composition;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.gatein.api.Util;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 
@@ -238,23 +239,10 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      * @return the complete container
      */
     protected Container completeContainer(Container container) {
-        container.setAccessPermissions(toStringArray(accessPermissions));
-        container.setMoveContainersPermissions(toStringArray(moveContainersPermissions));
-        container.setMoveAppsPermissions(toStringArray(moveAppsPermissions));
+        container.setAccessPermission(Util.from(accessPermissions));
+        container.setMoveContainersPermission(Util.from(moveContainersPermissions));
+        container.setMoveAppsPermission(Util.from(moveAppsPermissions));
         return container;
     }
 
-    /**
-     * Converts a List of Strings into an array of Strings or null, if the List is null.
-     *
-     * @param stringList    the list to convert, or null
-     * @return an array with the strings from the list, or null
-     */
-    private String[] toStringArray(List<String> stringList) {
-        if (null == stringList) {
-            return null;
-        } else {
-            return (String[]) stringList.toArray();
-        }
-    }
 }
