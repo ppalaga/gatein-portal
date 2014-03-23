@@ -367,7 +367,7 @@ public class PortalImpl implements Portal {
         dst.setWidth(src.getWidth());
         dst.setApplicationName(src.getType().getName());
 
-        ApplicationType type = src.getType();
+        ApplicationType<?> type = src.getType();
         if (type == ApplicationType.GADGET) {
             dst.setType(org.gatein.api.application.ApplicationType.GADGET);
         } else if (type == ApplicationType.PORTLET) {
