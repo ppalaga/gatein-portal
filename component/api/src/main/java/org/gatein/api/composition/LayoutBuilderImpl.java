@@ -14,7 +14,6 @@ import java.util.List;
  */
 public class LayoutBuilderImpl<T extends LayoutBuilder<T>> implements LayoutBuilder<T> {
     private static final Logger log = LoggerFactory.getLogger(LayoutBuilderImpl.class);
-    protected List<ContainerBuilderImpl<T>> containerBuilderList = new ArrayList<ContainerBuilderImpl<T>>();
     protected List<ContainerItem> children = new ArrayList<ContainerItem>();
 
     /**
@@ -35,7 +34,6 @@ public class LayoutBuilderImpl<T extends LayoutBuilder<T>> implements LayoutBuil
         //noinspection unchecked
         ColumnContainerBuilderImpl<T> containerBuilder = new ColumnContainerBuilderImpl<T>((T) this);
 
-        this.containerBuilderList.add(containerBuilder);
         return containerBuilder;
     }
 
@@ -57,7 +55,6 @@ public class LayoutBuilderImpl<T extends LayoutBuilder<T>> implements LayoutBuil
         //noinspection unchecked
         ContainerBuilderImpl<T> containerBuilder = new ContainerBuilderImpl<T>((T) this);
 
-        this.containerBuilderList.add(containerBuilder);
         return containerBuilder;
     }
 
@@ -79,7 +76,6 @@ public class LayoutBuilderImpl<T extends LayoutBuilder<T>> implements LayoutBuil
         //noinspection unchecked
         CustomContainerBuilderImpl<T> containerBuilder = new CustomContainerBuilderImpl<T>(container, (T) this);
 
-        this.containerBuilderList.add(containerBuilder);
         return containerBuilder;
     }
 
