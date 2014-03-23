@@ -8,9 +8,6 @@ import org.gatein.api.composition.PageBuilderImpl;
 import org.gatein.api.security.Permission;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -100,11 +97,9 @@ public class PageBuilderImplTest {
 
         Permission accessPermission = Permission.everyone();
 
-        List<String> moveAppsPermissions = new ArrayList<String>();
-        moveAppsPermissions.add("Everyone");
+        Permission moveAppsPermissions = Permission.everyone();
 
-        List<String> moveContainersPermissions = new ArrayList<String>();
-        moveContainersPermissions.add("Everyone");
+        Permission moveContainersPermissions = Permission.everyone();
 
         Page page = pageBuilder
                 .newColumnsBuilder() // top-level column row, with 3 cells
@@ -130,8 +125,8 @@ public class PageBuilderImplTest {
                 .showMaxWindow(false)
                 .accessPermission(accessPermission)
                 .editPermission(Permission.everyone())
-                .moveAppsPermissions(moveAppsPermissions)
-                .moveContainersPermissions(moveContainersPermissions)
+                .moveAppsPermission(moveAppsPermissions)
+                .moveContainersPermission(moveContainersPermissions)
             .build(); // finishes the page
 
         assertEquals("should have 3 children containers", 3, page.getChildren().size());

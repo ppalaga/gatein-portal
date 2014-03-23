@@ -3,7 +3,7 @@ package org.gatein.api.composition;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.gatein.api.Util;
+import org.gatein.api.security.Permission;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 
@@ -19,9 +19,9 @@ import org.gatein.common.logging.LoggerFactory;
  */
 public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements ContainerBuilder<T> {
     private static final Logger log = LoggerFactory.getLogger(ContainerBuilderImpl.class);
-    private List<String> accessPermissions;
-    private List<String> moveAppsPermissions;
-    private List<String> moveContainersPermissions;
+    private Permission accessPermissions;
+    private Permission moveAppsPermissions;
+    private Permission moveContainersPermissions;
     private boolean childrenBuild = false;
 
     /**
@@ -201,20 +201,20 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
     }
 
     @Override
-    public ContainerBuilder<T> accessPermissions(List<String> accessPermissions) {
-        this.accessPermissions = accessPermissions;
+    public ContainerBuilder<T> accessPermission(Permission accessPermission) {
+        this.accessPermissions = accessPermission;
         return this;
     }
 
     @Override
-    public ContainerBuilder<T> moveAppsPermissions(List<String> moveAppsPermissions) {
-        this.moveAppsPermissions = moveAppsPermissions;
+    public ContainerBuilder<T> moveAppsPermission(Permission moveAppsPermission) {
+        this.moveAppsPermissions = moveAppsPermission;
         return this;
     }
 
     @Override
-    public ContainerBuilder<T> moveContainersPermissions(List<String> moveContainersPermissions) {
-        this.moveContainersPermissions = moveContainersPermissions;
+    public ContainerBuilder<T> moveContainersPermission(Permission moveContainersPermission) {
+        this.moveContainersPermissions = moveContainersPermission;
         return this;
     }
 
@@ -239,9 +239,10 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      * @return the complete container
      */
     protected Container completeContainer(Container container) {
-        container.setAccessPermission(Util.from(accessPermissions));
-        container.setMoveContainersPermission(Util.from(moveContainersPermissions));
-        container.setMoveAppsPermission(Util.from(moveAppsPermissions));
+        container.setAccessPermission(accessPermissions);
+        //TODO make sure that move*Permissions are really required
+        container.setMoveContainersPermission(moveContainersPermissions);
+        container.setMoveAppsPermission(moveAppsPermissions);
         return container;
     }
 

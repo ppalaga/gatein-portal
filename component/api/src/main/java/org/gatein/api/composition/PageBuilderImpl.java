@@ -12,7 +12,6 @@ import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Main point of contact between the consumer of the API and the builders. Provides methods to set all the possible
@@ -43,8 +42,8 @@ public class PageBuilderImpl extends LayoutBuilderImpl<PageBuilder> implements P
     private boolean showMaxWindow;
     private Permission accessPermission;
     private Permission editPermission;
-    private List<String> moveAppsPermissions;
-    private List<String> moveContainersPermissions;
+    private Permission moveAppsPermission;
+    private Permission moveContainersPermission;
 
     public PageBuilderImpl() {
         if (log.isTraceEnabled()) {
@@ -103,14 +102,14 @@ public class PageBuilderImpl extends LayoutBuilderImpl<PageBuilder> implements P
     }
 
     @Override
-    public PageBuilder moveAppsPermissions(List<String> moveAppsPermissions) {
-        this.moveAppsPermissions = moveAppsPermissions;
+    public PageBuilder moveAppsPermission(Permission moveAppsPermission) {
+        this.moveAppsPermission = moveAppsPermission;
         return this;
     }
 
     @Override
-    public PageBuilder moveContainersPermissions(List<String> moveContainersPermissions) {
-        this.moveContainersPermissions = moveContainersPermissions;
+    public PageBuilder moveContainersPermission(Permission moveContainersPermission) {
+        this.moveContainersPermission = moveContainersPermission;
         return this;
     }
 
@@ -186,8 +185,8 @@ public class PageBuilderImpl extends LayoutBuilderImpl<PageBuilder> implements P
                     null,
                     Arrays.asList(Util.from(accessPermission)),
                     Util.from(editPermission)[0], // this is the same as the createPage, but is it right?
-                    moveAppsPermissions,
-                    moveContainersPermissions);
+                    Arrays.asList(Util.from(moveAppsPermission)),
+                    Arrays.asList(Util.from(moveContainersPermission)));
         }
         return pageState;
     }
