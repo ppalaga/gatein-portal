@@ -1,11 +1,10 @@
 package org.gatein.api.composition;
 
-import org.gatein.api.security.Permission;
-import org.gatein.common.logging.Logger;
-import org.gatein.common.logging.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.gatein.common.logging.Logger;
+import org.gatein.common.logging.LoggerFactory;
 
 /**
  * Provides the main implementation for the ContainerBuilder. Allows the caller to build a container, which
