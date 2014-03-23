@@ -25,7 +25,6 @@ package org.gatein.api.page;
 import org.exoplatform.portal.mop.page.PageContext;
 import org.exoplatform.portal.mop.page.PageKey;
 import org.exoplatform.portal.mop.page.PageState;
-import org.gatein.api.Portal;
 import org.gatein.api.PortalImpl;
 import org.gatein.api.PortalRequest;
 import org.gatein.api.Util;
@@ -145,6 +144,29 @@ public class PageImpl extends ContainerImpl implements Container, Page, Serializ
         setState(builder().editPermission(permissions[0]));
     }
 
+
+    @Override
+    public Permission getMoveAppsPermission() {
+        return Util.from(state.getMoveAppsPermissions());
+    }
+
+    @Override
+    public void setMoveAppsPermission(Permission permission) {
+        Parameters.requireNonNull(permission, "permission", "To allow to move appliactions for everyone use Permission.everyone()");
+        setState(builder().moveAppsPermissions(Util.from(permission)));
+    }
+
+    @Override
+    public Permission getMoveContainersPermission() {
+        return Util.from(state.getMoveContainersPermissions());
+    }
+
+    @Override
+    public void setMoveContainersPermission(Permission permission) {
+        Parameters.requireNonNull(permission, "permission", "To allow to move containers for everyone use Permission.everyone()");
+        setState(builder().moveContainersPermissions(Util.from(permission)));
+    }
+
     public boolean isCreate() {
         return create;
     }
@@ -179,4 +201,5 @@ public class PageImpl extends ContainerImpl implements Container, Page, Serializ
     public void setTitle(String title) {
         this.title = title;
     }
+
 }

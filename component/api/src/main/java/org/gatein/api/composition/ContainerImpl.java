@@ -2,6 +2,7 @@ package org.gatein.api.composition;
 
 import java.util.List;
 
+import org.gatein.api.page.PageImpl;
 import org.gatein.api.security.Permission;
 
 /**
@@ -15,8 +16,26 @@ public class ContainerImpl implements Container {
 
     private List<ContainerItem> children;
     private String template;
+
+    /**
+     * Beware that {@link PageImpl} which is a subclass of this uses another mechanism to store
+     * access permissions. Therefore it is generally safer to use
+     * {@code myContainer.getAccessPermission()} rather than {@code myContainer.accessPermissions}.
+     */
     private Permission accessPermissions;
+
+    /**
+     * Beware that {@link PageImpl} which is a subclass of this uses another mechanism to store
+     * move applications permissions. Therefore it is generally safer to use
+     * {@code myContainer.getMoveAppsPermission()} rather than {@code myContainer.moveAppsPermissions}.
+     */
     private Permission moveAppsPermissions;
+
+    /**
+     * Beware that {@link PageImpl} which is a subclass of this uses another mechanism to store
+     * move containers permissions. Therefore it is generally safer to use
+     * {@code myContainer.getMoveContainersPermission()} rather than {@code myContainer.moveContainersPermissions}.
+     */
     private Permission moveContainersPermissions;
 
     public ContainerImpl() {
