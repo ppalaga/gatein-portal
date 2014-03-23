@@ -10,12 +10,12 @@ import java.util.List;
  * @author <a href="mailto:jpkroehling+javadoc@redhat.com">Juraci Paixão Kröhling</a>
  */
 public class ColumnContainerBuilderImpl<T extends LayoutBuilder<T>> extends ContainerBuilderImpl<T> {
-    public ColumnContainerBuilderImpl(T self) {
-        super(self);
+    public ColumnContainerBuilderImpl(T topBuilder) {
+        super(topBuilder);
     }
 
-    public ColumnContainerBuilderImpl(T self, ContainerBuilderImpl<T> parent) {
-        super(self, parent);
+    public ColumnContainerBuilderImpl(T topBuilder, ContainerBuilderImpl<T> parent) {
+        super(topBuilder, parent);
     }
 
     /**
