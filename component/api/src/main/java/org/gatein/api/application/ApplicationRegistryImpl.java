@@ -3,6 +3,8 @@ package org.gatein.api.application;
 import org.exoplatform.application.registry.ApplicationRegistryService;
 import org.exoplatform.container.PortalContainer;
 import org.gatein.api.ApiException;
+import org.gatein.api.Util;
+import org.gatein.api.security.Permission;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,7 +122,7 @@ public class ApplicationRegistryImpl implements ApplicationRegistry {
     private Application adaptApplication(org.exoplatform.application.registry.Application originalApplication) {
         ApplicationImpl application = new ApplicationImpl();
 
-        application.setAccessPermissions(originalApplication.getAccessPermissions());
+        application.setAccessPermission(Util.from(originalApplication.getAccessPermissions()));
         application.setApplicationName(originalApplication.getApplicationName());
         application.setCategoryName(originalApplication.getCategoryName());
         application.setCreatedDate(originalApplication.getCreatedDate());

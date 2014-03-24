@@ -1,7 +1,8 @@
 package org.gatein.api.application;
 
 import java.util.Date;
-import java.util.List;
+
+import org.gatein.api.security.Permission;
 
 /**
  * Represents an implementation of the public API contract representing an Application, which can be a Gadget, a Portlet
@@ -28,7 +29,7 @@ public class ApplicationImpl implements Application {
     private Date createdDate;
     private Date modifiedDate;
 
-    private List<String> accessPermissions;
+    private Permission accessPermission;
 
     // TODO: the following fields exist on Application<S> from model, but not from registry's Application... figure out if they are critical
     private String title;
@@ -130,12 +131,12 @@ public class ApplicationImpl implements Application {
     }
 
     @Override
-    public List<String> getAccessPermissions() {
-        return accessPermissions;
+    public Permission getAccessPermission() {
+        return accessPermission;
     }
 
-    public void setAccessPermissions(List<String> accessPermissions) {
-        this.accessPermissions = accessPermissions;
+    public void setAccessPermission(Permission accessPermission) {
+        this.accessPermission = accessPermission;
     }
 
     @Override
@@ -230,7 +231,7 @@ public class ApplicationImpl implements Application {
                 ", width='" + width + '\'' +
                 ", createdDate=" + createdDate +
                 ", modifiedDate=" + modifiedDate +
-                ", accessPermissions=" + accessPermissions +
+                ", accessPermission=" + accessPermission +
                 '}';
     }
 }

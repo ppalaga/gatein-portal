@@ -350,10 +350,7 @@ public class PortalImpl implements Portal {
     private ContainerItem getContainerItemFor(org.exoplatform.portal.config.model.Application<?> src) {
         ApplicationImpl dst = new ApplicationImpl();
 
-        List<String> accessPermissions = new ArrayList<String>(src.getAccessPermissions().length);
-        Collections.addAll(accessPermissions, src.getAccessPermissions());
-
-        dst.setAccessPermissions(accessPermissions);
+        dst.setAccessPermission(Util.from(src.getAccessPermissions()));
         dst.setDescription(src.getDescription());
         dst.setTitle(src.getTitle());
         dst.setHeight(src.getHeight());
@@ -621,8 +618,7 @@ public class PortalImpl implements Portal {
         // as a component of the page. The risk is that any new properties added to the Application<S> will need
         // a new property at both the API level and here.
         TransientApplicationState<S> state = new TransientApplicationState<S>(src.getApplicationName());
-        List<String> accessPermissions = src.getAccessPermissions();
-        dst.setAccessPermissions(accessPermissions.toArray(new String[accessPermissions.size()]));
+        dst.setAccessPermissions(Util.from(src.getAccessPermission()));
         dst.setDescription(src.getDescription());
         dst.setTitle(src.getTitle());
         dst.setHeight(src.getHeight());
