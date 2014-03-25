@@ -40,10 +40,10 @@ public class PageBuilderImpl extends LayoutBuilderImpl<PageBuilder> implements P
     // PageState-related properties
     private String displayName;
     private boolean showMaxWindow;
-    private Permission accessPermission;
-    private Permission editPermission;
-    private Permission moveAppsPermission;
-    private Permission moveContainersPermission;
+    private Permission accessPermission = Container.DEFAULT_ACCESS_PERMISSION;
+    private Permission editPermission = Page.DEFAULT_EDIT_PERMISSION;
+    private Permission moveAppsPermission = Container.DEFAULT_MOVE_APPS_PERMISSION;
+    private Permission moveContainersPermission = Container.DEFAULT_MOVE_CONTAINERS_PERMISSION;
 
     public PageBuilderImpl() {
         if (log.isTraceEnabled()) {
@@ -167,18 +167,6 @@ public class PageBuilderImpl extends LayoutBuilderImpl<PageBuilder> implements P
      */
     private PageState getPageState() {
         if (null == pageState) {
-            if (null == editPermission) {
-                // here we need to make a crucial decision: either assume that "everyone" would be able to edit the
-                // page, or that only an admin, or throw an exception. Probably, the safest is to throw an exception,
-                // but we might consider that the usual scenario would be that everyone logged in would be able to change
-                // the page. If that's not the case, we need to change this permission.
-                editPermission = Permission.everyone();
-            }
-
-            if (null == accessPermission) {
-                accessPermission = Permission.everyone();
-            }
-
             pageState = new PageState(displayName,
                     description,
                     showMaxWindow,

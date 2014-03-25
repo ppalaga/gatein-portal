@@ -31,7 +31,6 @@ import org.exoplatform.portal.config.model.ApplicationType;
 import org.exoplatform.portal.config.model.ModelObject;
 import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.config.model.TransientApplicationState;
-import org.exoplatform.portal.mop.ProtectedContainer;
 import org.exoplatform.portal.mop.QueryResult;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.description.DescriptionService;
@@ -380,12 +379,16 @@ public class PortalImpl implements Portal {
             throw new EntityNotFoundException("Site " + pageId.getSiteId() + " doesn't exist");
         }
 
-        Permission edit = Permission.any("platform", "administrators");
-        List<String> moveAppsPermissions = ProtectedContainer.DEFAULT_MOVE_APPLICATIONS_PERMISSIONS;
-        List<String> moveContainersPermissions = ProtectedContainer.DEFAULT_MOVE_CONTAINERS_PERMISSIONS;
+        /* Fulfill the contract of Page and Container interfaces. */
+        Permission accessPermissions = Container.DEFAULT_ACCESS_PERMISSION;
+        Permission edit = Page.DEFAULT_EDIT_PERMISSION;
+        Permission moveAppsPermissions = Container.DEFAULT_MOVE_APPS_PERMISSION;
+        Permission moveContainersPermissions = Container.DEFAULT_MOVE_CONTAINERS_PERMISSION;
 
-        PageState pageState = new PageState(pageId.getPageName(), null, false, null, Arrays.asList(Util.from(Permission
-                .everyone())), Util.from(edit)[0], moveAppsPermissions, moveContainersPermissions);
+        PageState pageState = new PageState(pageId.getPageName(), null, false, null,
+                Arrays.asList(Util.from(accessPermissions)),
+                Util.from(edit)[0], Arrays.asList(Util.from(moveAppsPermissions)),
+                Arrays.asList(Util.from(moveContainersPermissions)));
 
         PageImpl p = new PageImpl(this, new PageContext(Util.from(pageId), pageState));
         p.setCreate(true);

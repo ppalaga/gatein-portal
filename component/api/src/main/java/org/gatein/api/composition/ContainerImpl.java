@@ -22,21 +22,21 @@ public class ContainerImpl implements Container {
      * access permissions. Therefore it is generally safer to use
      * {@code myContainer.getAccessPermission()} rather than {@code myContainer.accessPermissions}.
      */
-    private Permission accessPermissions;
+    private Permission accessPermission = Container.DEFAULT_ACCESS_PERMISSION;
 
     /**
      * Beware that {@link PageImpl} which is a subclass of this uses another mechanism to store
      * move applications permissions. Therefore it is generally safer to use
      * {@code myContainer.getMoveAppsPermission()} rather than {@code myContainer.moveAppsPermissions}.
      */
-    private Permission moveAppsPermissions;
+    private Permission moveAppsPermission = Container.DEFAULT_MOVE_APPS_PERMISSION;
 
     /**
      * Beware that {@link PageImpl} which is a subclass of this uses another mechanism to store
      * move containers permissions. Therefore it is generally safer to use
      * {@code myContainer.getMoveContainersPermission()} rather than {@code myContainer.moveContainersPermissions}.
      */
-    private Permission moveContainersPermissions;
+    private Permission moveContainersPermission = Container.DEFAULT_MOVE_CONTAINERS_PERMISSION;
 
     public ContainerImpl() {
     }
@@ -77,32 +77,32 @@ public class ContainerImpl implements Container {
 
     @Override
     public Permission getAccessPermission() {
-        return accessPermissions;
+        return accessPermission;
     }
 
     @Override
     public void setAccessPermission(Permission accessPermission) {
-        this.accessPermissions = accessPermission;
+        this.accessPermission = accessPermission;
     }
 
     @Override
     public Permission getMoveAppsPermission() {
-        return moveAppsPermissions;
+        return moveAppsPermission;
     }
 
     @Override
     public void setMoveAppsPermission(Permission moveAppsPermission) {
-        this.moveAppsPermissions = moveAppsPermission;
+        this.moveAppsPermission = moveAppsPermission;
     }
 
     @Override
     public Permission getMoveContainersPermission() {
-        return moveContainersPermissions;
+        return moveContainersPermission;
     }
 
     @Override
     public void setMoveContainersPermission(Permission moveContainersPermission) {
-        this.moveContainersPermissions = moveContainersPermission;
+        this.moveContainersPermission = moveContainersPermission;
     }
 
     public boolean isChildrenSet() {

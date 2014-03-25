@@ -19,9 +19,9 @@ import org.gatein.common.logging.LoggerFactory;
  */
 public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements ContainerBuilder<T> {
     private static final Logger log = LoggerFactory.getLogger(ContainerBuilderImpl.class);
-    private Permission accessPermissions;
-    private Permission moveAppsPermissions;
-    private Permission moveContainersPermissions;
+    private Permission accessPermission = Container.DEFAULT_ACCESS_PERMISSION;
+    private Permission moveAppsPermission = Container.DEFAULT_MOVE_APPS_PERMISSION;
+    private Permission moveContainersPermission = Container.DEFAULT_MOVE_CONTAINERS_PERMISSION;
     private boolean childrenBuild = false;
 
     /**
@@ -202,19 +202,19 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
 
     @Override
     public ContainerBuilder<T> accessPermission(Permission accessPermission) {
-        this.accessPermissions = accessPermission;
+        this.accessPermission = accessPermission;
         return this;
     }
 
     @Override
     public ContainerBuilder<T> moveAppsPermission(Permission moveAppsPermission) {
-        this.moveAppsPermissions = moveAppsPermission;
+        this.moveAppsPermission = moveAppsPermission;
         return this;
     }
 
     @Override
     public ContainerBuilder<T> moveContainersPermission(Permission moveContainersPermission) {
-        this.moveContainersPermissions = moveContainersPermission;
+        this.moveContainersPermission = moveContainersPermission;
         return this;
     }
 
@@ -239,10 +239,9 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      * @return the complete container
      */
     protected Container completeContainer(Container container) {
-        container.setAccessPermission(accessPermissions);
-        //TODO make sure that move*Permissions are really required
-        container.setMoveContainersPermission(moveContainersPermissions);
-        container.setMoveAppsPermission(moveAppsPermissions);
+        container.setAccessPermission(accessPermission);
+        container.setMoveContainersPermission(moveContainersPermission);
+        container.setMoveAppsPermission(moveAppsPermission);
         return container;
     }
 
