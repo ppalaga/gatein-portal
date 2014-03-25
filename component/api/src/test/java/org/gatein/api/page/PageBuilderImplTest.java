@@ -70,9 +70,9 @@ public class PageBuilderImplTest {
 
                         .newRowsBuilder() // new single row on the page
                             .child(gadgetCalculator) // application on the row
-                        .buildChildren() // finishes the row
+                        .buildToParentBuilder() // finishes the row
 
-                        .build() // finishes the layout
+                        .buildToTopBuilder() // finishes the layout
                         .siteName("classic")
                         .siteType("portal")
                         .name("awesome")
@@ -107,17 +107,17 @@ public class PageBuilderImplTest {
                     .newColumnsBuilder() // a new column set inside the second column, 33% of the width of the screen
                         .child(gadgetCalculator) // 50% of the second column, ie, ~16% of the screen size
                         .child(wsrpCompanyNews) // same as above
-                    .buildChildren() // finishes the second column
+                    .buildToParentBuilder() // finishes the second column
 
                     .newColumnsBuilder() // third column, the remaining 33%
                         .child(portletUsefulLinks) // about 1/4 of the remaining 33%
                         .child(portletUsefulLinks) // same as above
                         .child(gadgetCalculator) // same as above
                         .child(gadgetRss) // same as above
-                    .buildChildren() // finishes the third column
-                .buildChildren()
+                    .buildToParentBuilder() // finishes the third column
+                .buildToParentBuilder()
 
-                .build() // finishes the layout
+                .buildToTopBuilder() // finishes the layout
                 .siteName("classic")
                 .siteType("portal")
                 .name("awesome")

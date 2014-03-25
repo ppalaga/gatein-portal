@@ -103,7 +103,7 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      * @return the parent container or itself if this container is placed at the top level
      */
     @Override
-    public ContainerBuilder<T> buildChildren() {
+    public ContainerBuilder<T> buildToParentBuilder() {
         if (log.isTraceEnabled()) {
             log.trace("Building container on " + this);
         }
@@ -130,7 +130,7 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      * @return the PageBuilder that started this ContainerBuilder.
      */
     @Override
-    public T build() {
+    public T buildToTopBuilder() {
         if (!childrenBuild) {
             topBuilder.children(this.containers);
             childrenBuild = true;
