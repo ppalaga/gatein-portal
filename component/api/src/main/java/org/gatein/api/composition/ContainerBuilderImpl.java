@@ -120,11 +120,16 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      */
     @Override
     public T buildToTopBuilder() {
-        if (null == topBuilder) {
-            throw new IllegalStateException("topBuilder cannot be null when calling buildToTopBuilder().");
+        if (parent != null) {
+            buildToParentBuilder();
+            return parent.buildToTopBuilder();
+        } else {
+            if (null == topBuilder) {
+                throw new IllegalStateException("topBuilder cannot be null when calling buildToTopBuilder().");
+            }
+            topBuilder.child(build());
+            return topBuilder;
         }
-        topBuilder.child(build());
-        return topBuilder;
     }
 
 
