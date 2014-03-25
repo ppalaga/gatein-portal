@@ -105,20 +105,13 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
     @Override
     public ContainerBuilder<T> buildToParentBuilder() {
         if (log.isTraceEnabled()) {
-            log.trace("Building container on " + this);
+            log.trace("Building container to parent: " + this);
         }
 
-        if (null == parent && !childrenBuild) {
-            // we are the top level
-            topBuilder.children(this.containers);
-            childrenBuild = true;
-            return this;
+        if (null == parent) {
+            throw new IllegalStateException("Parent container builder cannot be null when calling buildToParentBuilder(). You may want to call either build() or buildToTopBuilder() in this situation.");
         }
-
-        // finishes the work on this container
-        Container result = build();
-        parent.containers.add(result);
-
+        parent.child(build());
         // as we are done building, return our parent, so the caller can fluently add more containers to it
         return parent;
     }
@@ -131,10 +124,10 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      */
     @Override
     public T buildToTopBuilder() {
-        if (!childrenBuild) {
-            topBuilder.children(this.containers);
-            childrenBuild = true;
+        if (null == topBuilder) {
+            throw new IllegalStateException("topBuilder cannot be null when calling buildToTopBuilder().");
         }
+        topBuilder.child(build());
         return topBuilder;
     }
 
