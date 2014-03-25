@@ -27,13 +27,7 @@ public class PageBuilderImpl extends LayoutBuilderImpl<PageBuilder> implements P
     private String name;
     private String description;
 
-    // PageContext-related properties
-    private PageContext pageContext;
-    private PageKey pageKey;
-    private PageState pageState;
-
     // SiteKey-related properties
-    private SiteKey siteKey;
     private String siteType;
     private String siteName;
 
@@ -132,7 +126,26 @@ public class PageBuilderImpl extends LayoutBuilderImpl<PageBuilder> implements P
     @Override
     public Page build() {
 
-        Page page = new PageImpl(getPageContext());
+        if (null == siteName || null == siteType) {
+            throw new IllegalStateException("API usage error: either the SiteKey should be set or both site name and site type should be set.");
+        }
+        if (null == name) {
+            throw new IllegalStateException("API usage error: either the PageKey should be set or both SiteKey and page name should be set.");
+        }
+        SiteKey siteKey = new SiteKey(siteType, siteName);
+
+        PageKey pageKey = new PageKey(siteKey, name);
+
+        PageState pageState = new PageState(displayName,
+                description,
+                showMaxWindow,
+                null,
+                Arrays.asList(Util.from(accessPermission)),
+                Util.from(editPermission)[0], // this is the same as the createPage, but is it right?
+                Arrays.asList(Util.from(moveAppsPermission)),
+                Arrays.asList(Util.from(moveContainersPermission)));
+        PageContext pageContext = new PageContext(pageKey, pageState);
+        Page page = new PageImpl(pageContext);
         page.setChildren(this.children);
 
         if (log.isTraceEnabled()) {
@@ -140,77 +153,6 @@ public class PageBuilderImpl extends LayoutBuilderImpl<PageBuilder> implements P
         }
 
         return page;
-    }
-
-    /**
-     * Returns a complete MOP PageContext based on the information from this builder.
-     * @return the PageContext for this page
-     * @throws java.lang.IllegalStateException if either the PageKey or PageState are null or invalid.
-     */
-    private PageContext getPageContext() {
-        if (null == pageContext) {
-            if (null == getPageKey() || null == getPageState()) {
-                throw new IllegalStateException("API usage error: either the PageContext should be set or both PageKey and PageState should be set.");
-            }
-
-            pageContext = new PageContext(getPageKey(), getPageState());
-        }
-
-        pageContext.setState(getPageState());
-        return pageContext;
-    }
-
-    /**
-     * Returns a complete MOP PageState, based on the information from this builder. If, at this stage, the
-     * editPermission wasn't set or isn't available, it's assumed that it'd be Permission#everyone.
-     * @return the PageState for this page
-     */
-    private PageState getPageState() {
-        if (null == pageState) {
-            pageState = new PageState(displayName,
-                    description,
-                    showMaxWindow,
-                    null,
-                    Arrays.asList(Util.from(accessPermission)),
-                    Util.from(editPermission)[0], // this is the same as the createPage, but is it right?
-                    Arrays.asList(Util.from(moveAppsPermission)),
-                    Arrays.asList(Util.from(moveContainersPermission)));
-        }
-        return pageState;
-    }
-
-    /**
-     * Returns the MOP PageKey, composed of the page name and the SiteKey.
-     * @return the PageKey for this page.
-     * @throws java.lang.IllegalStateException if the site key is invalid or the name is null
-     */
-    private PageKey getPageKey() {
-        if (null == pageKey) {
-            if (null == name || null == getSiteKey()) {
-                throw new IllegalStateException("API usage error: either the PageKey should be set or both SiteKey and page name should be set.");
-            }
-
-            pageKey = new PageKey(getSiteKey(), name);
-        }
-
-        return pageKey;
-    }
-
-    /**
-     * Returns the MOP SiteKey, composed of the site name and site type.
-     * @return the SiteKey for this page.
-     * @throws java.lang.IllegalStateException if the siteName or the siteType is null
-     */
-    private SiteKey getSiteKey() {
-        if (null == siteKey) {
-            if (null == siteName || null == siteType) {
-                throw new IllegalStateException("API usage error: either the SiteKey should be set or both site name and site type should be set.");
-            }
-
-            siteKey = new SiteKey(siteType, siteName);
-        }
-
-        return siteKey;
     }
 
     @Override
