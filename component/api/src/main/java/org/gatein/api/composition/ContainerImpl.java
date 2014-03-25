@@ -53,10 +53,6 @@ public class ContainerImpl implements Container {
 
     @Override
     public List<ContainerItem> getChildren() {
-        if (null == children) {
-            return null;
-        }
-
         return children;
     }
 

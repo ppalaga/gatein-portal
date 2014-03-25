@@ -22,13 +22,12 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
     private Permission accessPermission = Container.DEFAULT_ACCESS_PERMISSION;
     private Permission moveAppsPermission = Container.DEFAULT_MOVE_APPS_PERMISSION;
     private Permission moveContainersPermission = Container.DEFAULT_MOVE_CONTAINERS_PERMISSION;
-    private boolean childrenBuild = false;
 
     /**
-     * A list of all containers added to this container. For instance, this container might hold two columns and a row.
+     * A list of ContainerItems added to this container. For instance, this container might hold two columns and a row.
      * Or just an application.
      */
-    private List<ContainerItem> containers = new ArrayList<ContainerItem>();
+    private List<ContainerItem> children = new ArrayList<ContainerItem>();
 
     /**
      * Holds a reference to the container that created this container. Might be null if the container is at
@@ -69,10 +68,7 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      */
     @Override
     public ContainerBuilder<T> child(ContainerItem containerItem) {
-        if (null == this.containers) {
-            this.containers = new ArrayList<ContainerItem>();
-        }
-        this.containers.add(containerItem);
+        this.children.add(containerItem);
         return this;
     }
 
@@ -86,11 +82,11 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
     @Override
     public ContainerBuilder<T> children(List<ContainerItem> children) {
         if (null == children) {
-            this.containers.clear();
+            this.children.clear();
             return this;
         }
 
-        this.containers.addAll(children);
+        this.children.addAll(children);
         return this;
     }
 
@@ -138,7 +134,8 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      */
     @Override
     public Container build() {
-        return createContainer(containers);
+        ArrayList<ContainerItem> childrenCopy = new ArrayList<ContainerItem>(this.children);
+        return createContainer(childrenCopy);
     }
 
     /**
