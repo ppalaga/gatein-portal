@@ -116,7 +116,7 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
         }
 
         // finishes the work on this container
-        Container result = createContainer(containers);
+        Container result = build();
         parent.containers.add(result);
 
         // as we are done building, return our parent, so the caller can fluently add more containers to it
@@ -136,6 +136,16 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
             childrenBuild = true;
         }
         return topBuilder;
+    }
+
+
+
+    /**
+     * @see org.gatein.api.composition.ContainerBuilder#build()
+     */
+    @Override
+    public Container build() {
+        return createContainer(containers);
     }
 
     /**
