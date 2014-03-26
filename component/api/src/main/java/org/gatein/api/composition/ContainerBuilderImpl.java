@@ -6,6 +6,7 @@ import java.util.List;
 import org.gatein.api.security.Permission;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
+import org.gatein.pc.portlet.state.InvalidStateIdException;
 
 /**
  * Provides the main implementation for the ContainerBuilder. Allows the caller to build a container, which
@@ -39,6 +40,13 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      * A reference to the top-level builder, usually a PageBuilder.
      */
     private T topBuilder;
+
+    /**
+     * set to {@code true} when either {@link #buildToParentBuilder()} or {@link #buildToTopBuilder()}
+     * were called and then causes any subsequent call of any of the both to throw an {@link InvalidStateIdException}.
+     */
+    private boolean builtToParentOrTopBuilder = false;
+
 
     /**
      * Basic constructor, receiving a reference to the top-level builder. Serves to return it whenever the caller has
@@ -103,11 +111,15 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
         if (log.isTraceEnabled()) {
             log.trace("Building container to parent: " + this);
         }
+        if (builtToParentOrTopBuilder) {
+            throw new IllegalStateException("The result of this container builder was already submitted either to the parent container builder or to the top level container.");
+        }
 
         if (null == parent) {
             throw new IllegalStateException("Parent container builder cannot be null when calling buildToParentBuilder(). You may want to call either build() or buildToTopBuilder() in this situation.");
         }
         parent.child(build());
+        builtToParentOrTopBuilder = true;
         // as we are done building, return our parent, so the caller can fluently add more containers to it
         return parent;
     }
@@ -120,6 +132,9 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
      */
     @Override
     public T buildToTopBuilder() {
+        if (builtToParentOrTopBuilder) {
+            throw new IllegalStateException("The result of this container builder was already submitted either to the parent container builder or to the top level container.");
+        }
         if (parent != null) {
             buildToParentBuilder();
             return parent.buildToTopBuilder();
@@ -128,6 +143,7 @@ public class ContainerBuilderImpl<T extends LayoutBuilder<T>> implements Contain
                 throw new IllegalStateException("topBuilder cannot be null when calling buildToTopBuilder().");
             }
             topBuilder.child(build());
+            builtToParentOrTopBuilder = true;
             return topBuilder;
         }
     }
