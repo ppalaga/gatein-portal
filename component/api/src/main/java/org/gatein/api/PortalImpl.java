@@ -62,6 +62,7 @@ import org.gatein.api.navigation.Navigation;
 import org.gatein.api.navigation.NavigationImpl;
 import org.gatein.api.oauth.OAuthProvider;
 import org.gatein.api.oauth.OAuthProviderAccessor;
+import org.gatein.api.composition.BareContainer;
 import org.gatein.api.composition.Container;
 import org.gatein.api.composition.ContainerImpl;
 import org.gatein.api.composition.ContainerItem;
@@ -514,7 +515,7 @@ public class PortalImpl implements Portal {
      * @param container the Container from the API to be converted
      * @return an ArrayList instead of a generic List, as it's required by org.exoplatform.portal.config.model.Container#setChildren
      */
-    private ArrayList<ModelObject> getModelObjectsFor(Container container) {
+    private ArrayList<ModelObject> getModelObjectsFor(BareContainer container) {
         // basically, what this method does is:
         // 1) iterates over the children of the provided container: each of them should be a ModelObject item on a list
         //    at the end of the execution
