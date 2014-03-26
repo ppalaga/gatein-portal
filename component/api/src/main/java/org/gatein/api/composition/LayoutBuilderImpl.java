@@ -7,8 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Basic layout builder, providing a wrapper for the ContainerBuilder. Provides also helper methods for simple
- * common use cases.
+ * A basic layout builder.
  *
  * @author <a href="mailto:jpkroehling+javadoc@redhat.com">Juraci Paixão Kröhling</a>
  */
@@ -17,10 +16,7 @@ public class LayoutBuilderImpl<T extends LayoutBuilder<T>> implements LayoutBuil
     protected List<ContainerItem> children = new ArrayList<ContainerItem>();
 
     /**
-     * Marks the begin of work on a layout container, returning a ContainerBuilder that will serve as the implicit
-     * context, aka parent container.
-     *
-     * @return the base layout container
+     * @see org.gatein.api.composition.LayoutBuilder#newColumnsBuilder()
      */
     @Override
     public ContainerBuilder<T> newColumnsBuilder() {
@@ -31,17 +27,14 @@ public class LayoutBuilderImpl<T extends LayoutBuilder<T>> implements LayoutBuil
         /**
          * this is the root container, located at the first level
          */
-        //noinspection unchecked
+        @SuppressWarnings("unchecked")
         ColumnContainerBuilderImpl<T> containerBuilder = new ColumnContainerBuilderImpl<T>((T) this);
 
         return containerBuilder;
     }
 
     /**
-     * Marks the begin of work on a layout container, returning a ContainerBuilder that will serve as the implicit
-     * context, aka parent container.
-     *
-     * @return the base layout container
+     * @see org.gatein.api.composition.LayoutBuilder#newRowsBuilder()
      */
     @Override
     public ContainerBuilder<T> newRowsBuilder() {
@@ -52,17 +45,14 @@ public class LayoutBuilderImpl<T extends LayoutBuilder<T>> implements LayoutBuil
         /**
          * this is the root container, located at the first level
          */
-        //noinspection unchecked
+        @SuppressWarnings("unchecked")
         ContainerBuilderImpl<T> containerBuilder = new ContainerBuilderImpl<T>((T) this);
 
         return containerBuilder;
     }
 
     /**
-     * Marks the begin of work on a layout container, returning a ContainerBuilder that will serve as the implicit
-     * context, aka parent container.
-     *
-     * @return the base layout container
+     * @see org.gatein.api.composition.LayoutBuilder#newCustomContainerBuilder(org.gatein.api.composition.Container)
      */
     @Override
     public ContainerBuilder<T> newCustomContainerBuilder(Container container) {
@@ -73,41 +63,54 @@ public class LayoutBuilderImpl<T extends LayoutBuilder<T>> implements LayoutBuil
         /**
          * this is the root container, located at the first level
          */
-        //noinspection unchecked
+        @SuppressWarnings("unchecked")
         CustomContainerBuilderImpl<T> containerBuilder = new CustomContainerBuilderImpl<T>(container, (T) this);
 
         return containerBuilder;
     }
 
     /**
-     * Helper method to make it easy to create a simple page with a single application.
-     *
-     * @param containerItem the application that should be present on the page.
-     * @return the layout builder with a complete container, based on the application
+     * @see org.gatein.api.composition.LayoutBuilder#newCustomContainerBuilder(java.lang.String)
+     */
+    @Override
+    public ContainerBuilder<T> newCustomContainerBuilder(String template) {
+        if (log.isTraceEnabled()) {
+            log.trace("Creating a new custom container builder");
+        }
+
+        Container container = new ContainerImpl(template, null);
+        @SuppressWarnings("unchecked")
+        T t = (T) this;
+        return new CustomContainerBuilderImpl<T>(container, t);
+    }
+
+
+    /**
+     * @see org.gatein.api.composition.LayoutBuilder#child(org.gatein.api.composition.ContainerItem)
      */
     @Override
     public T child(ContainerItem containerItem) {
         this.children.add(containerItem);
-        //noinspection unchecked
-        return (T) this;
+        @SuppressWarnings("unchecked")
+        T t = (T) this;
+        return t;
     }
 
     /**
-     * Helper method to make it easy to create a simple page with a single application.
-     *
-     * @param children the application that should be present on the page.
-     * @return the layout builder with a complete container, based on the application
+     * @see org.gatein.api.composition.LayoutBuilder#children(java.util.List)
      */
     @Override
     public T children(List<ContainerItem> children) {
         if (null == children) {
             this.children.clear();
-            //noinspection unchecked
-            return (T) this;
+            @SuppressWarnings("unchecked")
+            T t = (T) this;
+            return (T) t;
         }
 
         this.children.addAll(children);
-        //noinspection unchecked
-        return (T) this;
+        @SuppressWarnings("unchecked")
+        T t = (T) this;
+        return t;
     }
 }

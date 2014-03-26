@@ -3,7 +3,7 @@ package org.gatein.api.composition;
 import java.util.List;
 
 /**
- * Builds a <code>ColumnContainerImpl</code>, with a specialized container type.
+ * Builds a {@link ColumnContainerImpl}.
  *
  * @see ColumnContainerImpl
  *

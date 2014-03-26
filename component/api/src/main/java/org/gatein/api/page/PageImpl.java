@@ -45,9 +45,6 @@ public class PageImpl extends ContainerImpl implements Container, Page, Serializ
     private PageKey key;
     private PageState state;
 
-    private String ownerType;
-    private String ownerId;
-
     private boolean create;
     private String title;
 

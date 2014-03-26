@@ -6,13 +6,18 @@ import org.gatein.api.page.PageImpl;
 import org.gatein.api.security.Permission;
 
 /**
- * Basic representation of a Container, as defined by the public API.
+ * Basic representation of a Container, as defined by the public API. Children are rendered in rows.
  *
  * @see org.gatein.api.composition.Container
  *
  * @author <a href="mailto:jpkroehling+javadoc@redhat.com">Juraci Paixão Kröhling</a>
  */
 public class ContainerImpl implements Container {
+
+    /**
+     * Internal to this implementation. May change without notice.
+     */
+    private static final String ROWS_TEMPLATE_URL = "system:/groovy/portal/webui/container/UIContainer.gtmpl";
 
     private List<ContainerItem> children;
     private String template;
@@ -48,7 +53,7 @@ public class ContainerImpl implements Container {
 
     public ContainerImpl(List<ContainerItem> children) {
         this.children = children;
-        this.template = "system:/groovy/portal/webui/container/UIContainer.gtmpl";
+        this.template = ROWS_TEMPLATE_URL;
     }
 
     @Override
