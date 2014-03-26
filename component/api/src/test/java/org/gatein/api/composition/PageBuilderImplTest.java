@@ -1,4 +1,4 @@
-package org.gatein.api.page;
+package org.gatein.api.composition;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -11,6 +11,7 @@ import org.gatein.api.composition.ContainerBuilder;
 import org.gatein.api.composition.ContainerBuilderImpl;
 import org.gatein.api.composition.PageBuilder;
 import org.gatein.api.composition.PageBuilderImpl;
+import org.gatein.api.page.Page;
 import org.gatein.api.security.Permission;
 import org.junit.Test;
 
