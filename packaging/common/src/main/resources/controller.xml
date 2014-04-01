@@ -197,6 +197,20 @@
     </route>
   </route>
 
+  <route path="/scripts/{gtn:version}/{gtn:scope}/">
+    <route-param qname="gtn:handler">
+      <value>staticScriptResource</value>
+    </route-param>
+    <path-param qname="gtn:version" encoding="preserve-path">
+      <pattern>[^/]*</pattern>
+    </path-param>
+    <route path="/{gtn:resource}">
+      <path-param qname="gtn:resource" encoding="preserve-path">
+        <pattern>.*</pattern>
+      </path-param>
+    </route>
+  </route>
+
   <!-- Default handler -->
   <route path="/">
     <route-param qname="gtn:handler">

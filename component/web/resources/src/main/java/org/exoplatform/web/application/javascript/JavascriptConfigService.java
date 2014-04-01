@@ -19,8 +19,6 @@
 
 package org.exoplatform.web.application.javascript;
 
-import javax.servlet.ServletContext;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -37,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.servlet.ServletContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.CompositeReader;
@@ -57,6 +57,8 @@ import org.gatein.portal.controller.resource.script.ScriptGraph;
 import org.gatein.portal.controller.resource.script.ScriptGroup;
 import org.gatein.portal.controller.resource.script.ScriptResource;
 import org.gatein.portal.controller.resource.script.ScriptResource.DepInfo;
+import org.gatein.portal.controller.resource.script.stat.StaticScriptResource;
+import org.gatein.portal.controller.resource.script.stat.StaticScriptResources;
 import org.gatein.wci.ServletContainerFactory;
 import org.gatein.wci.WebApp;
 import org.gatein.wci.WebAppListener;
@@ -71,6 +73,8 @@ public class JavascriptConfigService extends AbstractResourceService implements 
 
     /** The scripts. */
     final ScriptGraph scripts;
+
+    private final StaticScriptResources staticScriptResources;
 
     /** . */
     private final WebAppListener deployer;
@@ -95,6 +99,7 @@ public class JavascriptConfigService extends AbstractResourceService implements 
 
         //
         this.scripts = new ScriptGraph();
+        this.staticScriptResources = new StaticScriptResources();
         this.deployer = new JavascriptConfigDeployer(context.getPortalContainerName(), this);
     }
 
@@ -475,5 +480,15 @@ public class JavascriptConfigService extends AbstractResourceService implements 
         public void close() throws IOException {
             sub.close();
         }
+    }
+
+    /**
+     * @param staticScriptResource
+     */
+    public void addStaticScriptResource(StaticScriptResource staticScriptResource) {
+        staticScriptResources.add(staticScriptResource);
+    }
+    public StaticScriptResource getStaticScriptResource(String resourcePath) {
+        return staticScriptResources.get(resourcePath);
     }
 }

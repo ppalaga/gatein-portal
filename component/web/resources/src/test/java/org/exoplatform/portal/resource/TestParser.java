@@ -29,6 +29,7 @@ import org.exoplatform.test.mocks.servlet.MockServletContext;
 import org.exoplatform.web.application.javascript.DependencyDescriptor;
 import org.exoplatform.web.application.javascript.Javascript;
 import org.exoplatform.web.application.javascript.JavascriptConfigParser;
+import org.exoplatform.web.application.javascript.JavascriptTask;
 import org.exoplatform.web.application.javascript.ScriptResourceDescriptor;
 import org.gatein.portal.controller.resource.ResourceId;
 import org.gatein.portal.controller.resource.ResourceScope;
@@ -39,6 +40,11 @@ import org.gatein.portal.controller.resource.script.Module.Local.Content;
  */
 public class TestParser extends AbstractGateInTest {
 
+    private static List<ScriptResourceDescriptor> parseScripts(JavascriptConfigParser parser) {
+        JavascriptTask jst = new JavascriptTask();
+        parser.addScriptsTo(jst);
+        return jst.getDescriptors();
+    }
 
 
     public void testShared() throws Exception {
@@ -54,7 +60,7 @@ public class TestParser extends AbstractGateInTest {
 
         //
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
         assertEquals(2, scripts.size());
         ScriptResourceDescriptor desc = scripts.get(0);
         assertEquals(new ResourceId(ResourceScope.SHARED, "foo"), desc.getId());
@@ -75,7 +81,7 @@ public class TestParser extends AbstractGateInTest {
                 + "</portlet>" + "</gatein-resources>";
 
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
         assertEquals(1, scripts.size());
         ScriptResourceDescriptor desc = scripts.get(0);
         assertEquals(new ResourceId(ResourceScope.PORTLET, "mypath/foo"), desc.getId());
@@ -92,7 +98,7 @@ public class TestParser extends AbstractGateInTest {
 
         //
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
         assertEquals(1, scripts.size());
         ScriptResourceDescriptor desc = scripts.get(0);
         assertEquals(new ResourceId(ResourceScope.PORTAL, "foo"), desc.getId());
@@ -108,7 +114,7 @@ public class TestParser extends AbstractGateInTest {
 
         //
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
         assertEquals(1, scripts.size());
         ScriptResourceDescriptor desc = scripts.get(0);
 
@@ -127,7 +133,7 @@ public class TestParser extends AbstractGateInTest {
 
         //
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
         assertEquals(1, scripts.size());
         ScriptResourceDescriptor desc = scripts.get(0);
         assertEquals(new ResourceId(ResourceScope.PORTAL, "foo"), desc.getId());
@@ -143,7 +149,7 @@ public class TestParser extends AbstractGateInTest {
 
         //
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
         assertEquals(1, scripts.size());
         ScriptResourceDescriptor desc = scripts.get(0);
         List<Locale> locales = desc.getSupportedLocales();
@@ -157,7 +163,7 @@ public class TestParser extends AbstractGateInTest {
                 + "<module><name>foo</name><url>http://jquery.com/jquery.js</url></module>" + "</gatein-resources>";
 
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(validConfig.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> descs = parser.parseScripts();
+        List<ScriptResourceDescriptor> descs = parseScripts(parser);
 
         assertEquals(1, descs.size());
         ScriptResourceDescriptor desc = descs.get(0);
@@ -172,7 +178,7 @@ public class TestParser extends AbstractGateInTest {
 
         //
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
         ScriptResourceDescriptor desc = scripts.get(0);
         assertEquals("f", desc.getAlias());
         assertEquals("b", desc.getDependencies().get(0).getAlias());
@@ -181,7 +187,7 @@ public class TestParser extends AbstractGateInTest {
                 + "<module>zozo</module>" + "<as>zz</as>" + "</depends>" + "</module>" + "</portal>" + "</gatein-resources>";
 
         JavascriptConfigParser parser1 = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> ptScripts = parser1.parseScripts();
+        List<ScriptResourceDescriptor> ptScripts = parseScripts(parser1);
         ScriptResourceDescriptor portalDesc = ptScripts.get(0);
         assertEquals("z", portalDesc.getAlias());
         assertEquals("zz", portalDesc.getDependencies().get(0).getAlias());
@@ -200,7 +206,7 @@ public class TestParser extends AbstractGateInTest {
                 + "</gatein-resources>";
 
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
 
         assertEquals(3, scripts.size());
         for (ScriptResourceDescriptor des : scripts) {
@@ -216,7 +222,7 @@ public class TestParser extends AbstractGateInTest {
                 "<module>" + "<name>foo_module</name>" + "<load-group>foo_group</load-group>" + "<url>testURL</url>"
                 + "</module>" + "</gatein-resources>";
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
 
         assertEquals(2, scripts.size());
         for (ScriptResourceDescriptor des : scripts) {
@@ -230,7 +236,7 @@ public class TestParser extends AbstractGateInTest {
                 + "</gatein-resources>";
 
         JavascriptConfigParser parser = new JavascriptConfigParser(new MockServletContext("mypath"), new ByteArrayInputStream(config.getBytes("UTF-8")));
-        List<ScriptResourceDescriptor> scripts = parser.parseScripts();
+        List<ScriptResourceDescriptor> scripts = parseScripts(parser);
 
         ScriptResourceDescriptor des = scripts.get(0);
         Javascript.Local module = (Javascript.Local) des.getModules().get(0);

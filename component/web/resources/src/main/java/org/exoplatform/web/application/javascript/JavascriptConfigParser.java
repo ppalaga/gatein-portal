@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +44,7 @@ import org.gatein.portal.controller.resource.ResourceId;
 import org.gatein.portal.controller.resource.ResourceScope;
 import org.gatein.portal.controller.resource.script.FetchMode;
 import org.gatein.portal.controller.resource.script.Module.Local.Content;
+import org.gatein.portal.controller.resource.script.stat.StaticScriptResource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -130,13 +130,11 @@ public class JavascriptConfigParser {
 
     private final Document document;
 
-    private static final String SCRIPT_RESOURCE_DESCRIPTORS_ATTR = "gatein.script.resource.descriptors";
+    static final String SCRIPT_RESOURCE_DESCRIPTORS_ATTR = "gatein.script.resource.descriptors";
 
     private static final Log log = ExoLogger.getExoLogger(JavascriptConfigParser.class);
 
     private static final String[] PARSEABLE_SRIPT_TAGS = new String[] {JAVA_SCRIPT_TAG, MODULE_TAG, SCRIPTS_TAG, PORTLET_TAG, PORTAL_TAG};
-
-    private static final String[] AMD_FILE_EXTENSIONS = new String[] {".js"};
 
     public JavascriptConfigParser(ServletContext servletContext, InputStream input) throws SAXException, IOException, ParserConfigurationException {
         this.servletContext = servletContext;
@@ -156,12 +154,8 @@ public class JavascriptConfigParser {
 
     public static void processConfigResource(InputStream is, JavascriptConfigService service, ServletContext scontext) throws SAXException, IOException, ParserConfigurationException {
         JavascriptConfigParser parser = new JavascriptConfigParser(scontext, is);
-        List<ScriptResourceDescriptor> descriptors = parser.parseScripts();
         JavascriptTask task = new JavascriptTask();
-        for (ScriptResourceDescriptor script : descriptors) {
-            task.addDescriptor(script);
-        }
-        scontext.setAttribute(SCRIPT_RESOURCE_DESCRIPTORS_ATTR, Collections.unmodifiableList(descriptors));
+        parser.addScriptsTo(task);
         task.execute(service, scontext);
     }
 
@@ -179,19 +173,17 @@ public class JavascriptConfigParser {
         scontext.removeAttribute(SCRIPT_RESOURCE_DESCRIPTORS_ATTR);
     }
 
-    public List<ScriptResourceDescriptor> parseScripts() {
-        List<ScriptResourceDescriptor> result = new ArrayList<ScriptResourceDescriptor>();
+    public void addScriptsTo(JavascriptTask result) {
         Element element = document.getDocumentElement();
         for (String tagName : PARSEABLE_SRIPT_TAGS) {
             for (Element childElt : XMLTools.getChildren(element, tagName)) {
                 Collection<ScriptResourceDescriptor> descriptors = parseScripts(childElt);
                 if (descriptors != null) {
-                    result.addAll(descriptors);
+                    result.addDescriptors(descriptors);
                 }
             }
         }
         parseAmd(element, result);
-        return result;
     }
 
     private Collection<ScriptResourceDescriptor> parseScripts(Element element) {
@@ -399,35 +391,66 @@ public class JavascriptConfigParser {
 
     }
 
-    private void parseAmd(Element documentElement, List<ScriptResourceDescriptor> result) {
+    private void parseAmd(Element documentElement, final JavascriptTask result) {
         Element amd = XMLTools.getUniqueChild(documentElement, AMD_TAG, false);
         if (amd != null) {
             for (Element fileset : XMLTools.getChildren(amd, FILESET_TAG)) {
                 Element dirElement = XMLTools.getUniqueChild(fileset, DIRECTORY_TAG, true);
                 String dir = XMLTools.asString(dirElement, true);
-                if (dir.charAt(dir.length() - 1) != AmdResourceScanner.FILE_SEPARATOR) {
-                    dir = dir + '/';
+                if (dir.charAt(0) != AmdResourceScanner.FILE_SEPARATOR) {
+                    dir = new StringBuilder(dir.length() +1).append(AmdResourceScanner.FILE_SEPARATOR).append(dir).toString();
+                }
+                final String directory;
+                final String directorySlash;
+                if (dir.charAt(dir.length() - 1) == AmdResourceScanner.FILE_SEPARATOR) {
+                    directory = dir.substring(0, dir.length() -1);
+                    directorySlash = dir;
+                } else {
+                    directory = dir;
+                    directorySlash = dir + AmdResourceScanner.FILE_SEPARATOR;
                 }
 
                 String[] includes = parseCludes(fileset, INCLUDES_TAG, INCLUDE_TAG);
                 String[] excludes = parseCludes(fileset, EXCLUDES_TAG, EXCLUDE_TAG);
-                List<String> amdFiles = new AmdResourceScanner(dir, includes, excludes, AMD_FILE_EXTENSIONS, servletContext).scan();
-                for (String amdFile : amdFiles) {
-                    /* if dir is somethig like /js/amd and amdFile is something like /js/amd/package/mymodule.js
-                     * then fqModuleName will be package/mymodule */
-                    String fqModuleName = amdFile.substring(dir.length() + 1, amdFile.length() - 3);
+                final AmdResourceScanner.AmdResourceVisitor visitor = new AmdResourceScanner.AmdResourceVisitor() {
+                    @Override
+                    public void visit(String amdFile) {
+                        int amdFileLength = amdFile.length();
+                        if (amdFileLength >= 3) {
+                            char lastChar = amdFile.charAt(amdFileLength - 1);
+                            char lastButOneChar = amdFile.charAt(amdFileLength - 2);
+                            char lastButTwoChar = amdFile.charAt(amdFileLength - 3);
+                            if (lastButTwoChar == '.'
+                                    && (lastButOneChar == 'j' || lastButOneChar == 'J')
+                                    && (lastChar == 's' || lastChar == 'S')) {
+                                /* ends with .js */
+                                /* if dir is somethig like /js/amd and amdFile is something like /js/amd/package/mymodule.js
+                                 * then fqModuleName will be package/mymodule */
+                                String fqModuleName = amdFile.substring(directorySlash.length(), amdFileLength - 3);
 
-                    String alias = toModuleAlias(fqModuleName);
-                    ScriptResourceDescriptor d = new ScriptResourceDescriptor(
-                            new ResourceId(ResourceScope.SHARED, fqModuleName),
-                            FetchMode.ON_LOAD, alias, null, true);
-                    Javascript js = Javascript.create(
-                            new ResourceId(ResourceScope.SHARED, LEGACY_JAVA_SCRIPT),
-                            amdFile, contextPath, Integer.MAX_VALUE);
-                    d.modules.add(js);
+                                String alias = toModuleAlias(fqModuleName);
+                                ScriptResourceDescriptor d = new ScriptResourceDescriptor(
+                                        new ResourceId(ResourceScope.SHARED, fqModuleName),
+                                        FetchMode.ON_LOAD, alias, null, true);
+                                Javascript js = Javascript.create(
+                                        new ResourceId(ResourceScope.SHARED, LEGACY_JAVA_SCRIPT),
+                                        amdFile, contextPath, Integer.MAX_VALUE);
+                                d.modules.add(js);
 
-                    result.add(d);
-                }
+                                result.addDescriptor(d);
+                                return;
+                            }
+                        }
+
+                        /* amdFile is not ending with *.js */
+                        /* directory.length() - 1 because we want the resourceURI to start with '/' */
+                        String resourceURI = amdFile.substring(directorySlash.length() - 1, amdFileLength);
+                        StaticScriptResource r = new StaticScriptResource(contextPath, directory, resourceURI);
+                        result.addStaticScriptResource(r);
+
+                    }
+                };
+                new AmdResourceScanner(directorySlash, includes, excludes, servletContext).scan(visitor);
 
             }
         }
@@ -461,11 +484,14 @@ public class JavascriptConfigParser {
 
     private static class AmdResourceScanner {
 
+        public interface AmdResourceVisitor {
+            void visit(String path);
+        }
+
         private static final char FILE_SEPARATOR = '/';
         private final String directory;
         private final ServletContext servletContext;
         private final IncludeExcludeFileSelector selector;
-        private final String[] fileExtensions;
 
         /**
          * @param directory
@@ -473,39 +499,38 @@ public class JavascriptConfigParser {
          * @param excludes
          * @param servletContext
          */
-        public AmdResourceScanner(String directory, String[] includes, String[] excludes, String[] fileExtensions, ServletContext servletContext) {
+        public AmdResourceScanner(String directory, String[] includes, String[] excludes, ServletContext servletContext) {
             super();
             IncludeExcludeFileSelector sel = new IncludeExcludeFileSelector();
             sel.setIncludes(includes);
             sel.setExcludes(excludes);
             this.selector = sel;
-            this.fileExtensions = fileExtensions;
             this.directory = directory;
             this.servletContext = servletContext;
         }
 
-        public List<String> scan() {
-            List<String> result = new ArrayList<String>();
-            return scanDirectory(directory, result);
+        public void scan(AmdResourceVisitor visitor) {
+            scanDirectory(directory, visitor);
         }
 
         /**
          * @param directory
          * @return
          */
-        private List<String> scanDirectory(String directory, List<String> result) {
+        private void scanDirectory(String directory, AmdResourceVisitor visitor) {
             @SuppressWarnings("unchecked")
             Set<String> paths = servletContext.getResourcePaths(directory);
             if (paths != null && paths.size() > 0) {
                 for (String path : paths) {
-                    if (isDirectory(path)) {
-                        scanDirectory(path, result);
-                    } else if (matchesExtensions(path)) {
-                        String relName = path.substring(this.directory.length());
-                        FileInfo fileInfo = new SimpleFileInfo(relName, true);
+                    String relName = path.substring(this.directory.length());
+                    boolean isDir = isDirectory(path);
+                    if (isDir) {
+                        scanDirectory(path, visitor);
+                    } else {
+                        FileInfo fileInfo = new SimpleFileInfo(relName, isDir);
                         try {
                             if (selector.isSelected(fileInfo)) {
-                                result.add(path);
+                                visitor.visit(path);
                             }
                         } catch (IOException e) {
                             throw new RuntimeException("Could not filter path '"+ path +"'", e);
@@ -513,20 +538,6 @@ public class JavascriptConfigParser {
                     }
                 }
             }
-            return result;
-        }
-
-        /**
-         * @param path
-         * @return
-         */
-        private boolean matchesExtensions(String path) {
-            for (String ext : fileExtensions) {
-                if (path.endsWith(ext)) {
-                    return true;
-                }
-            }
-            return false;
         }
 
         /**
