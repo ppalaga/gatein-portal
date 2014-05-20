@@ -32,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,6 +48,9 @@ import org.exoplatform.portal.resource.compressor.ResourceCompressor;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.web.ControllerContext;
+import org.exoplatform.web.application.javascript.ScriptResources.ImmutablePathsBuilder;
+import org.exoplatform.web.application.javascript.ScriptResources.ImmutableScriptResources;
+import org.exoplatform.web.application.javascript.ScriptResources.ImmutableStaticScriptResourcesBuilder;
 import org.exoplatform.web.controller.QualifiedName;
 import org.exoplatform.web.controller.router.URIWriter;
 import org.gatein.portal.controller.resource.ResourceId;
@@ -58,8 +62,8 @@ import org.gatein.portal.controller.resource.script.Module;
 import org.gatein.portal.controller.resource.script.ScriptGraph;
 import org.gatein.portal.controller.resource.script.ScriptGroup;
 import org.gatein.portal.controller.resource.script.ScriptResource;
-import org.gatein.portal.controller.resource.script.StaticScriptResource;
 import org.gatein.portal.controller.resource.script.ScriptResource.DepInfo;
+import org.gatein.portal.controller.resource.script.StaticScriptResource;
 import org.gatein.wci.ServletContainerFactory;
 import org.gatein.wci.WebApp;
 import org.gatein.wci.WebAppListener;
@@ -73,11 +77,12 @@ public class JavascriptConfigService extends AbstractResourceService implements 
     private final Log log = ExoLogger.getLogger(JavascriptConfigService.class);
 
     /** The scripts. */
-    final ScriptGraph scripts;
+    private final ScriptGraph scripts;
+    private Map<String, List<String>> paths;
 
     /** A collection of {@link StaticScriptResource}s keyed by the given
      * {@link StaticScriptResource#getResourcePath()}*/
-    private final Map<String, StaticScriptResource> staticScriptResources;
+    private Map<String, StaticScriptResource> staticScriptResources;
 
     /** . */
     private final WebAppListener deployer;
@@ -107,7 +112,8 @@ public class JavascriptConfigService extends AbstractResourceService implements 
 
         //
         this.scripts = new ScriptGraph();
-        this.staticScriptResources = new HashMap<String, StaticScriptResource>();
+        this.paths = ImmutablePathsBuilder.emptyPaths();
+        this.staticScriptResources = ImmutableStaticScriptResourcesBuilder.emptyStaticScriptResources();
         this.deployer = new JavascriptConfigDeployer(context.getPortalContainerName(), this);
     }
 
@@ -260,6 +266,24 @@ public class JavascriptConfigService extends AbstractResourceService implements 
 
         JSONObject paths = new JSONObject();
         JSONObject shim = new JSONObject();
+
+        for (Entry<String, List<String>> en : this.paths.entrySet()) {
+            String prefix = en.getKey();
+            List<String> pathValues = en.getValue();
+            switch (pathValues.size()) {
+                case 0:
+                    if (log.isDebugEnabled()) {
+                        log.debug("Ignoring paths prefix '"+ prefix +"' with empty path values.");
+                    }
+                    break;
+                case 1:
+                    paths.put(prefix, pathValues.get(0));
+                    break;
+                default:
+                    paths.put(prefix, pathValues);
+                    break;
+            }
+        }
 
         Map<ResourceId, String> groupURLs = new HashMap<ResourceId, String>();
         for (ScriptResource resource : getAllResources()) {
@@ -545,25 +569,6 @@ public class JavascriptConfigService extends AbstractResourceService implements 
     }
 
     /**
-     * Puts the given {@link StaticScriptResource} to {@link #staticScriptResources} using
-     * {@link StaticScriptResource#getResourcePath()} as a key.
-     *
-     * @param staticScriptResource
-     */
-    public void addStaticScriptResource(StaticScriptResource staticScriptResource) {
-        String resourcePath = staticScriptResource.getResourcePath();
-        if (staticScriptResources.containsKey(resourcePath)) {
-            log.warn("Ignoring "+ StaticScriptResource.class.getSimpleName() +" with an already available resource path: "+ staticScriptResource);
-        } else {
-            /* add only if not there already */
-            if (log.isDebugEnabled()) {
-                log.debug("Adding "+ staticScriptResource);
-            }
-            staticScriptResources.put(resourcePath, staticScriptResource);
-        }
-    }
-
-    /**
      * Equivalent to {@code staticScriptResources.get(resourcePath)}.
      * See {@link #staticScriptResources} and {@link StaticScriptResource#getResourcePath()}
      *
@@ -573,5 +578,73 @@ public class JavascriptConfigService extends AbstractResourceService implements 
     public StaticScriptResource getStaticScriptResource(String resourcePath) {
         return staticScriptResources.get(resourcePath);
     }
+
+    /**
+     * Adds the data provided in the given {@link ScriptResources} to this
+     * {@link JavascriptConfigService}. The object provided in the {@code scriptResources} can
+     * be modified during the call, namely, the values already available in this {@link JavascriptConfigService}
+     * are removed from the {@code scriptResources}.
+     *
+     * @param scriptResources
+     */
+    public void add(ScriptResources scriptResources) {
+
+        for (ScriptResourceDescriptor desc : scriptResources.getScriptResourceDescriptors()) {
+            String contextPath = null;
+            if (desc.modules.size() > 0) {
+                contextPath = desc.modules.get(0).getContextPath();
+            }
+
+            ScriptResource resource = scripts.addResource(desc.id, desc.fetchMode, desc.alias, desc.group, contextPath, desc.nativeAmd);
+            if (resource != null) {
+                for (Javascript module : desc.modules) {
+                    module.addModuleTo(resource);
+                }
+                for (Locale locale : desc.getSupportedLocales()) {
+                    resource.addSupportedLocale(locale);
+                }
+                for (DependencyDescriptor dependency : desc.dependencies) {
+                    resource.addDependency(dependency.getResourceId(), dependency.getAlias(), dependency.getPluginResource());
+                }
+            }
+        }
+
+        List<StaticScriptResource> toAddStaticScriptResources = scriptResources.getStaticScriptResources();
+        if (toAddStaticScriptResources != null && !toAddStaticScriptResources.isEmpty()) {
+            Map<String, StaticScriptResource> newStaticScriptResources = new ScriptResources.ImmutableStaticScriptResourcesBuilder(
+                    this.staticScriptResources).accept(toAddStaticScriptResources).build();
+            this.staticScriptResources = newStaticScriptResources;
+        }
+
+        Map<String, List<String>> toAddPaths = scriptResources.getPaths();
+        if (toAddPaths != null && !toAddPaths.isEmpty()) {
+            Map<String, List<String>> newPaths = new ScriptResources.ImmutablePathsBuilder(this.paths)
+                    .accept(toAddPaths).build();
+            this.paths = newPaths;
+        }
+
+    }
+
+    public void remove(ImmutableScriptResources scriptResources, String contextPath) {
+        for (ScriptResourceDescriptor desc : scriptResources.getScriptResourceDescriptors()) {
+            scripts.removeResource(desc.id, contextPath);
+        }
+
+        List<StaticScriptResource> toRemoveStaticScriptResources = scriptResources.getStaticScriptResources();
+        if (toRemoveStaticScriptResources != null && !toRemoveStaticScriptResources.isEmpty()) {
+            Map<String, StaticScriptResource> newStaticScriptResources = new ScriptResources.ImmutableStaticScriptResourcesBuilder(
+                    this.staticScriptResources).removeAll(toRemoveStaticScriptResources).build();
+            this.staticScriptResources = newStaticScriptResources;
+        }
+
+        Map<String, List<String>> toRemovePaths = scriptResources.getPaths();
+        if (toRemovePaths != null && !toRemovePaths.isEmpty()) {
+            Map<String, List<String>> newPaths = new ScriptResources.ImmutablePathsBuilder(this.paths)
+                    .removeAll(toRemovePaths).build();
+            this.paths = newPaths;
+        }
+
+    }
+
 
 }

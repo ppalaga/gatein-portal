@@ -29,7 +29,6 @@ import org.exoplatform.test.mocks.servlet.MockServletContext;
 import org.exoplatform.web.application.javascript.DependencyDescriptor;
 import org.exoplatform.web.application.javascript.Javascript;
 import org.exoplatform.web.application.javascript.JavascriptConfigParser;
-import org.exoplatform.web.application.javascript.JavascriptTask;
 import org.exoplatform.web.application.javascript.ScriptResourceDescriptor;
 import org.gatein.portal.controller.resource.ResourceId;
 import org.gatein.portal.controller.resource.ResourceScope;
@@ -40,10 +39,8 @@ import org.gatein.portal.controller.resource.script.Module.Local.Content;
  */
 public class TestParser extends AbstractGateInTest {
 
-    private static List<ScriptResourceDescriptor> parseScripts(JavascriptConfigParser parser) {
-        JavascriptTask jst = new JavascriptTask();
-        parser.addScriptsTo(jst);
-        return jst.getDescriptors();
+    private static List<ScriptResourceDescriptor> parseScripts(JavascriptConfigParser parser) throws ResourceParserException {
+        return parser.parse().getScriptResourceDescriptors();
     }
 
 
