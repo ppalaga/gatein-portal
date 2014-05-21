@@ -91,6 +91,8 @@ public class SkinService extends AbstractResourceService implements Startable {
 
     private static final Pattern URL_PATTERN = Pattern.compile("(url" + LEFT_P + "['\"]?)([^'\";" + RIGHT_P + "]+)(['\"]?\\))");
 
+    private static final Pattern DOLLAR_PATTERN = Pattern.compile("\\$");
+
     /** Immutable and therefore thread safe. */
     private static final Pattern LT = Pattern.compile("[^{;]*;\\s*/\\*\\s*orientation=lt\\s*\\*/");
 
@@ -149,6 +151,23 @@ public class SkinService extends AbstractResourceService implements Startable {
             this.controller = controller;
             this.orientation = orientation;
         }
+    }
+
+    /**
+     * Returns {@code true} if the given {@code url} starts with "//" or "http:" or "https:".
+     * Otherewise, returns {@code false}.
+     *
+     * @param url the URL to decide about
+     * @return see above
+     */
+    public static boolean isCrossSiteUrl(String url) {
+        int len = url == null ? 0 : url.length();
+        /* either starts with "//" or starts with "http:" or "https:" */
+        return (len >= 2 && url.charAt(0) == '/' && url.charAt(1) == '/')
+                || (len >= 5 && url.charAt(0) == 'h' && url.charAt(1) == 't'
+                        && url.charAt(2) == 't' && url.charAt(3) == 'p'
+                        && (url.charAt(4) == ':'
+                                || (len >= 6 && url.charAt(4) == 's') && url.charAt(5) == ':'));
     }
 
     public SkinService(ExoContainerContext context, ResourceCompressor compressor) {
@@ -753,34 +772,41 @@ public class SkinService extends AbstractResourceService implements Startable {
                 Matcher matcher = IMPORT_PATTERN.matcher(line);
                 while (matcher.find()) {
                     String includedPath = matcher.group(2);
-                    if (!includedPath.startsWith("/")) {
-                        includedPath = basePath + includedPath;
-                    }
-
-                    StringBuffer strReplace = new StringBuffer();
-                    if (merge) {
-                        Resource ssskin = getCSSResource(includedPath, basePath + skin.getFileName());
-                        processCSSRecursively(context, strReplace, merge, ssskin, orientation);
+                    String str = null;
+                    if (isCrossSiteUrl(includedPath)) {
+                        /* leave an external URL as it is */
+                        str = matcher.group();
                     } else {
-                        // Remove leading '/' and trailing '.css'
-                        String resource = includedPath.substring(1, includedPath.length() - ".css".length());
+                        /* an internal path */
+                        if (!includedPath.startsWith("/")) {
+                            includedPath = basePath + includedPath;
+                        }
 
-                        //
-                        Map<QualifiedName, String> params = new HashMap<QualifiedName, String>();
-                        params.put(ResourceRequestHandler.VERSION_QN, ResourceRequestHandler.VERSION);
-                        params.put(ResourceRequestHandler.ORIENTATION_QN, orientation == Orientation.RT ? "rt" : "lt");
-                        params.put(ResourceRequestHandler.COMPRESS_QN, merge ? "min" : "");
-                        params.put(WebAppController.HANDLER_PARAM, "skin");
-                        params.put(ResourceRequestHandler.RESOURCE_QN, resource);
-                        StringBuilder embeddedPath = new StringBuilder();
-                        context.renderURL(params, new URIWriter(embeddedPath, MimeType.PLAIN));
+                        StringBuffer strReplace = new StringBuffer();
+                        if (merge) {
+                            Resource ssskin = getCSSResource(includedPath, basePath + skin.getFileName());
+                            processCSSRecursively(context, strReplace, merge, ssskin, orientation);
+                        } else {
+                            // Remove leading '/' and trailing '.css'
+                            String resource = includedPath.substring(1, includedPath.length() - ".css".length());
 
-                        //
-                        strReplace.append(matcher.group(1));
-                        strReplace.append(embeddedPath);
-                        strReplace.append(matcher.group(3));
+                            //
+                            Map<QualifiedName, String> params = new HashMap<QualifiedName, String>();
+                            params.put(ResourceRequestHandler.VERSION_QN, ResourceRequestHandler.VERSION);
+                            params.put(ResourceRequestHandler.ORIENTATION_QN, orientation == Orientation.RT ? "rt" : "lt");
+                            params.put(ResourceRequestHandler.COMPRESS_QN, merge ? "min" : "");
+                            params.put(WebAppController.HANDLER_PARAM, "skin");
+                            params.put(ResourceRequestHandler.RESOURCE_QN, resource);
+                            StringBuilder embeddedPath = new StringBuilder();
+                            context.renderURL(params, new URIWriter(embeddedPath, MimeType.PLAIN));
+
+                            //
+                            strReplace.append(matcher.group(1));
+                            strReplace.append(embeddedPath);
+                            strReplace.append(matcher.group(3));
+                        }
+                        str = DOLLAR_PATTERN.matcher(strReplace.toString()).replaceAll("\\\\\\$");
                     }
-                    String str = strReplace.toString().replaceAll("\\$", "\\\\\\$");
                     matcher.appendReplacement((StringBuffer) appendable, str);
                 }
                 matcher.appendTail((StringBuffer) appendable);
@@ -798,7 +824,6 @@ public class SkinService extends AbstractResourceService implements Startable {
         Matcher patternMatcher = pattern.matcher(line);
         StringBuffer tmpBuilder = new StringBuffer();
         while (patternMatcher.find()) {
-            StringBuilder fontFaceReplace = new StringBuilder();
             Matcher urlMatcher = URL_PATTERN.matcher(patternMatcher.group());
             StringBuffer tmpURL = new StringBuffer();
             while(urlMatcher.find()) {
