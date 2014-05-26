@@ -155,7 +155,7 @@ public class SkinService extends AbstractResourceService implements Startable {
 
     /**
      * Returns {@code true} if the given {@code url} starts with "//" or "http:" or "https:".
-     * Otherewise, returns {@code false}.
+     * Otherwise, returns {@code false}.
      *
      * @param url the URL to decide about
      * @return see above
@@ -168,6 +168,10 @@ public class SkinService extends AbstractResourceService implements Startable {
                         && url.charAt(2) == 't' && url.charAt(3) == 'p'
                         && (url.charAt(4) == ':'
                                 || (len >= 6 && url.charAt(4) == 's') && url.charAt(5) == ':'));
+    }
+
+    public static boolean isCrossSiteUrlNaive(String url) {
+        return url != null && ( url.startsWith("//") || url.startsWith("http:") || url.startsWith("https:"));
     }
 
     public SkinService(ExoContainerContext context, ResourceCompressor compressor) {
