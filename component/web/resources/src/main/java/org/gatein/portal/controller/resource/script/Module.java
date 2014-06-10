@@ -39,6 +39,7 @@ import org.exoplatform.web.WebAppController;
 import org.exoplatform.web.controller.QualifiedName;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
+import org.gatein.portal.controller.resource.ResourceId;
 import org.gatein.portal.controller.resource.ResourceRequestHandler;
 
 /**
@@ -58,16 +59,12 @@ public abstract class Module {
     };
 
     /** . */
-    protected ScriptResource resource;
-
-    /** . */
     protected final String contextPath;
 
     /** . */
-    protected int priority;
+    protected final int priority;
 
-    Module(ScriptResource resource, String contextPath, int priority) {
-        this.resource = resource;
+    Module(String contextPath, int priority) {
         this.contextPath = contextPath;
         this.priority = priority;
     }
@@ -77,10 +74,8 @@ public abstract class Module {
         /** . */
         private final String uri;
 
-        Remote(ScriptResource resource, String contextPath, String uri, int priority) {
-            super(resource, contextPath, priority);
-
-            //
+        Remote(String contextPath, String uri, int priority) {
+            super(contextPath, priority);
             this.uri = uri;
         }
 
@@ -105,18 +100,15 @@ public abstract class Module {
         /** . */
         private final Map<QualifiedName, String> parameters;
 
-        Local(ScriptResource resource, String contextPath, String path, String resourceBundle, int priority) {
-            this(resource, contextPath, new Content[] { new Content(path) }, resourceBundle, priority);
-        }
 
-        Local(ScriptResource resource, String contextPath, Content[] contents, String resourceBundle, int priority) {
-            super(resource, contextPath, priority);
+        Local(ResourceId id, String contextPath, Content[] contents, String resourceBundle, int priority) {
+            super(contextPath, priority);
 
             //
             Map<QualifiedName, String> parameters = new HashMap<QualifiedName, String>();
             parameters.put(WebAppController.HANDLER_PARAM, "script");
-            parameters.put(ResourceRequestHandler.RESOURCE_QN, resource.getId().getName());
-            parameters.put(ResourceRequestHandler.SCOPE_QN, resource.getId().getScope().name());
+            parameters.put(ResourceRequestHandler.RESOURCE_QN, id.getName());
+            parameters.put(ResourceRequestHandler.SCOPE_QN, id.getScope().name());
 
             //
             if (contents == null) {
@@ -134,10 +126,6 @@ public abstract class Module {
                 }
             }
             return null;
-        }
-
-        public Content[] getContents() {
-            return contents;
         }
 
         public String getResourceBundle() {
@@ -242,10 +230,6 @@ public abstract class Module {
                 return isPath;
             }
         }
-    }
-
-    public ScriptResource getResource() {
-        return resource;
     }
 
     public abstract boolean isRemote();

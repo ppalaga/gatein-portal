@@ -47,6 +47,7 @@ import org.exoplatform.commons.utils.CompositeReader;
 import org.exoplatform.commons.utils.PropertyManager;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.portal.resource.AbstractResourceService;
+import org.exoplatform.portal.resource.InvalidResourceException;
 import org.exoplatform.portal.resource.compressor.ResourceCompressor;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -55,7 +56,6 @@ import org.exoplatform.web.application.javascript.ScriptResources.ImmutableScrip
 import org.exoplatform.web.controller.QualifiedName;
 import org.exoplatform.web.controller.router.URIWriter;
 import org.gatein.portal.controller.resource.ResourceId;
-import org.gatein.portal.controller.resource.ResourceRequestHandler;
 import org.gatein.portal.controller.resource.ResourceScope;
 import org.gatein.portal.controller.resource.script.BaseScriptResource;
 import org.gatein.portal.controller.resource.script.FetchMode;
@@ -343,7 +343,7 @@ public class JavascriptConfigService extends AbstractResourceService {
     private static final Log log = ExoLogger.getLogger(JavascriptConfigService.class);
 
     /** The scripts. */
-    private final ScriptGraph scripts;
+    private ScriptGraph scripts;
 
     /**
      * require.js path mappings.
@@ -384,8 +384,7 @@ public class JavascriptConfigService extends AbstractResourceService {
     public JavascriptConfigService(ExoContainerContext context, ResourceCompressor compressor) {
         super(compressor);
 
-        //
-        this.scripts = new ScriptGraph();
+        this.scripts = ScriptGraph.empty();
         this.pathMappings = PathMappings.empty();
         this.staticScriptResources = StaticScriptResources.empty();
     }
@@ -788,9 +787,7 @@ public class JavascriptConfigService extends AbstractResourceService {
              * It does not matter if this.sharedBaseUrl gets initialized several times
              * concurrently as the result will be the same every time.*/
 
-            Map<QualifiedName, String> baseParams = BaseScriptResource.createBaseParameters();
-            baseParams.put(ResourceRequestHandler.SCOPE_QN, ResourceScope.SHARED.name());
-            baseParams.put(ResourceRequestHandler.RESOURCE_QN, "fake");
+            Map<QualifiedName, String> baseParams = BaseScriptResource.createBaseParameters(ResourceScope.SHARED, "fake");
 
             /* 52 is the length of /portal/scripts/3.8.0.Beta01-SNAPSHOT/SHARED/fake.js
              * it should be a little bit more than necessary in most cases */
@@ -837,8 +834,9 @@ public class JavascriptConfigService extends AbstractResourceService {
      * removed later).
      *
      * @param scriptResources entities to add to this {@link JavascriptConfigService}
+     * @throws InvalidResourceException
      */
-    public void add(ScriptResources scriptResources) throws DuplicateResourceKeyException {
+    public void add(ScriptResources scriptResources) throws InvalidResourceException {
 
         /* combine the present resources with the ones being added */
         StaticScriptResources newStaticScriptResources = this.staticScriptResources.add(scriptResources.getStaticScriptResources());
@@ -846,25 +844,7 @@ public class JavascriptConfigService extends AbstractResourceService {
         /* combine the present paths with the ones being added */
         PathMappings newPaths = this.pathMappings.add(scriptResources.getContextPath(), scriptResources.getPaths());
 
-        for (ScriptResourceDescriptor desc : scriptResources.getScriptResourceDescriptors()) {
-            String contextPath = null;
-            if (desc.modules.size() > 0) {
-                contextPath = desc.modules.get(0).getContextPath();
-            }
-
-            ScriptResource resource = scripts.addResource(desc.id, desc.fetchMode, desc.alias, desc.group, contextPath, desc.nativeAmd);
-            if (resource != null) {
-                for (Javascript module : desc.modules) {
-                    module.addModuleTo(resource);
-                }
-                for (Locale locale : desc.getSupportedLocales()) {
-                    resource.addSupportedLocale(locale);
-                }
-                for (DependencyDescriptor dependency : desc.dependencies) {
-                    resource.addDependency(dependency.getResourceId(), dependency.getAlias(), dependency.getPluginResource());
-                }
-            }
-        }
+        this.scripts = this.scripts.add(scriptResources.getContextPath(), scriptResources.getScriptResourceDescriptors());
 
         /* No exception was thrown, now we can at once assign these two local variables to the fields of the this service */
         this.staticScriptResources = newStaticScriptResources;
@@ -880,9 +860,7 @@ public class JavascriptConfigService extends AbstractResourceService {
      * @param contextPath for which which context path the script resources should be removed
      */
     public void remove(ImmutableScriptResources scriptResources) {
-        for (ScriptResourceDescriptor desc : scriptResources.getScriptResourceDescriptors()) {
-            scripts.removeResource(desc.id, scriptResources.getContextPath());
-        }
+        this.scripts = this.scripts.remove(scriptResources.getContextPath(), scriptResources.getScriptResourceDescriptors());
 
         List<StaticScriptResource> toRemoveStaticScriptResources = scriptResources.getStaticScriptResources();
         if (toRemoveStaticScriptResources != null && !toRemoveStaticScriptResources.isEmpty()) {

@@ -19,12 +19,18 @@
 
 package org.gatein.portal.controller.resource.script;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.exoplatform.component.test.AbstractGateInTest;
+import org.apache.lucene.search.Similarity;
+import org.exoplatform.component.test.BaseGateInTest;
+import org.exoplatform.portal.resource.InvalidResourceException;
+import org.exoplatform.web.application.javascript.DependencyDescriptor;
+import org.exoplatform.web.application.javascript.DuplicateResourceKeyException;
+import org.exoplatform.web.application.javascript.ScriptResourceDescriptor;
 import org.gatein.common.util.Tools;
 import org.gatein.portal.controller.resource.ResourceId;
 import org.gatein.portal.controller.resource.ResourceScope;
@@ -32,7 +38,9 @@ import org.gatein.portal.controller.resource.ResourceScope;
 /**
  * @author <a href="mailto:julien.viet@exoplatform.com">Julien Viet</a>
  */
-public class TestScriptGraph extends AbstractGateInTest {
+public class TestScriptGraph extends BaseGateInTest {
+    private static final String CONTEXT_PATH_1 = "/my-app-1";
+    private static final String CONTEXT_PATH_2 = "/my-app-2";
 
     /** . */
     private static final ResourceId A = new ResourceId(ResourceScope.SHARED, "A");
@@ -46,39 +54,103 @@ public class TestScriptGraph extends AbstractGateInTest {
     /** . */
     private static final ResourceId D = new ResourceId(ResourceScope.PORTAL, "D");
 
-    public void testDetectCycle1() {
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A);
-        ScriptResource b = graph.addResource(B);
-        a.addDependency(B);
-        try {
-            b.addDependency(A);
-            fail();
-        } catch (IllegalStateException ignore) {
+    private static ResourceId id(ResourceScope scope) {
+        return new ResourceId(scope, "test_"+ scope.name());
+    }
+
+    private static ScriptResourceDescriptor immediate(ResourceId rid) {
+        return new ScriptResourceDescriptor(rid, FetchMode.IMMEDIATE);
+    }
+    private static ScriptResourceDescriptor onLoad(ResourceId rid) {
+        return new ScriptResourceDescriptor(rid, FetchMode.ON_LOAD);
+    }
+
+    private static ScriptResourceDescriptor addDep(ScriptResourceDescriptor desc, ResourceId depId) {
+        DependencyDescriptor dependency = new DependencyDescriptor(depId, null, null);
+        desc.getDependencies().add(dependency);
+        return desc;
+    }
+
+    public void testAddRemoveEmpty() throws InvalidResourceException {
+        ScriptGraph initial = ScriptGraph.empty();
+
+        for (ResourceScope scope : ResourceScope.values()) {
+            Collection<ScriptResource> scopeValues = initial.getResources(scope);
+            assertEquals(0, scopeValues.size());
+        }
+
+        for (ResourceScope scope : ResourceScope.values()) {
+            ResourceId id = id(scope);
+            ScriptGraph afterAdd = initial.add(CONTEXT_PATH_1, Arrays.asList(immediate(id)));
+
+            Collection<ScriptResource> scopeValues = afterAdd.getResources(scope);
+            assertEquals(1, scopeValues.size());
+
+            assertEquals(id, afterAdd.getResource(id).getId());
+
+            ScriptGraph afterRemoveEmpty = afterAdd.remove(CONTEXT_PATH_1, Collections.<ScriptResourceDescriptor> emptyList());
+            assertSame(afterAdd, afterRemoveEmpty);
+            ScriptGraph afterRemoveNull = afterAdd.remove(CONTEXT_PATH_1, null);
+            assertSame(afterAdd, afterRemoveNull);
+
+            ScriptGraph afterRemoveNonExistent = afterAdd.remove(CONTEXT_PATH_2, Arrays.asList(immediate(new ResourceId(scope, "non_exsistent_"+ scope.name()))));
+            scopeValues = afterRemoveNonExistent.getResources(scope);
+            assertEquals(1, scopeValues.size());
+            assertEquals(id, afterAdd.getResource(id).getId());
+
+            ScriptGraph afterRemove = afterAdd.remove(CONTEXT_PATH_1, Arrays.asList(immediate(id)));
+            scopeValues = afterRemove.getResources(scope);
+            assertEquals(0, scopeValues.size());
+            assertNull(afterRemove.getResource(id));
         }
     }
 
-    public void testDetectCycle2() {
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A);
-        ScriptResource b = graph.addResource(B);
-        ScriptResource c = graph.addResource(C);
-        a.addDependency(B);
-        b.addDependency(C);
+    public void testSelfDependency() throws InvalidResourceException {
+        ScriptGraph initial = ScriptGraph.empty();
+        ScriptGraph afterAdd = initial.add(CONTEXT_PATH_1, Arrays.asList(
+                addDep(immediate(A), A)
+        ));
+        /* assert that self-dep has no effect */
+        assertEquals(0, afterAdd.getResource(A).getDependencies().size());
+        assertEquals(0, afterAdd.getResource(A).getClosure().size());
+    }
+
+    public void testDetectTwoNodeCycle() {
+        ScriptGraph initial = ScriptGraph.empty();
         try {
-            c.addDependency(A);
-            fail();
-        } catch (IllegalStateException ignore) {
+            initial.add(CONTEXT_PATH_1, Arrays.asList(
+                    addDep(immediate(A), B),
+                    addDep(immediate(B), A)
+            ));
+            fail("InvalidResourceException expected");
+        } catch (InvalidResourceException expected) {
+            expected.printStackTrace();
         }
     }
 
-    public void testClosure() {
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A);
-        a.addDependency(B);
-        ScriptResource b = graph.addResource(B);
-        b.addDependency(C);
-        ScriptResource c = graph.addResource(C);
+    public void testDetectThreeNodeCycle() {
+        ScriptGraph initial = ScriptGraph.empty();
+        try {
+            initial.add(CONTEXT_PATH_1, Arrays.asList(
+                    addDep(immediate(A), B),
+                    addDep(immediate(B), C),
+                    addDep(immediate(C), A)
+            ));
+            fail("InvalidResourceException expected");
+        } catch (InvalidResourceException expected) {
+        }
+    }
+
+    public void testClosure() throws InvalidResourceException {
+        ScriptGraph graph = ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                addDep(immediate(A), B),
+                addDep(immediate(B), C),
+                immediate(C)
+        ));
+        ScriptResource a = graph.getResource(A);
+        ScriptResource b = graph.getResource(B);
+        ScriptResource c = graph.getResource(C);
+
         assertEquals(Tools.toSet(B, C), a.getClosure());
         assertEquals(Tools.toSet(C), b.getClosure());
         assertEquals(Collections.emptySet(), c.getClosure());
@@ -86,44 +158,50 @@ public class TestScriptGraph extends AbstractGateInTest {
 
     /**
      * Closure of any node depends on node relationships in graph but does not depend on the order of building graph nodes
+     * @throws InvalidResourceException
      */
-    public void testBuildingOrder() {
-        ScriptGraph graph = new ScriptGraph();
-
-        // A -> B
-        ScriptResource a = graph.addResource(A);
-        a.addDependency(B);
-
-        // C -> D
-        ScriptResource c = graph.addResource(C);
-        c.addDependency(D);
-
-        // B -> C
-        ScriptResource b = graph.addResource(B);
-        b.addDependency(C);
-
-        ScriptResource d = graph.addResource(D);
+    public void testBuildingOrder() throws InvalidResourceException {
+        ScriptGraph graph = ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                addDep(immediate(A), B),
+                addDep(immediate(C), D),
+                addDep(immediate(B), C),
+                immediate(D)
+        ));
+        ScriptResource a = graph.getResource(A);
+        ScriptResource b = graph.getResource(B);
+        ScriptResource c = graph.getResource(C);
+        ScriptResource d = graph.getResource(D);
 
         assertEquals(Tools.toSet(D), c.getClosure());
 
         assertEquals(Tools.toSet(C, D), b.getClosure());
 
         assertEquals(Tools.toSet(B, C, D), a.getClosure());
+
+        assertEquals(Collections.emptySet(), d.getClosure());
     }
 
-    public void testFetchMode() {
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A, FetchMode.ON_LOAD);
-        ScriptResource b = graph.addResource(B, FetchMode.IMMEDIATE);
-        ScriptResource c = graph.addResource(C, FetchMode.IMMEDIATE);
+    public void testFetchMode() throws InvalidResourceException {
         try {
-            a.addDependency(C);
-            fail();
-        } catch (IllegalStateException e) {
+            ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                    addDep(onLoad(A), C),
+                    immediate(B),
+                    immediate(C)
+            ));
+            fail("InvalidResourceException expected");
+        } catch (InvalidResourceException expected) {
         }
-        b.addDependency(C);
 
-        //
+        ScriptGraph graph = ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                onLoad(A),
+                addDep(immediate(B), C),
+                immediate(C)
+        ));
+
+        ScriptResource a = graph.getResource(A);
+        ScriptResource b = graph.getResource(B);
+        ScriptResource c = graph.getResource(C);
+
         Map<ScriptResource, FetchMode> resolution = graph.resolve(Collections.<ResourceId, FetchMode> singletonMap(A, null));
         assertResultOrder(resolution.keySet());
         assertEquals(1, resolution.size());
@@ -152,9 +230,9 @@ public class TestScriptGraph extends AbstractGateInTest {
 
     // ********
 
-    public void testResolveDefaultOnLoadFetchMode() {
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A, FetchMode.ON_LOAD);
+    public void testResolveDefaultOnLoadFetchMode() throws InvalidResourceException {
+        ScriptGraph graph = ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(onLoad(A)));
+        ScriptResource a = graph.getResource(A);
 
         // Use default fetch mode
         Map<ScriptResource, FetchMode> test = graph.resolve(Collections.<ResourceId, FetchMode> singletonMap(A, null));
@@ -173,9 +251,9 @@ public class TestScriptGraph extends AbstractGateInTest {
         assertEquals(0, test.size());
     }
 
-    public void testResolveDefaultImmediateFetchMode() {
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A, FetchMode.IMMEDIATE);
+    public void testResolveDefaultImmediateFetchMode() throws InvalidResourceException {
+        ScriptGraph graph = ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(immediate(A)));
+        ScriptResource a = graph.getResource(A);
 
         // Use default fetch mode
         Map<ScriptResource, FetchMode> test = graph.resolve(Collections.<ResourceId, FetchMode> singletonMap(A, null));
@@ -194,15 +272,23 @@ public class TestScriptGraph extends AbstractGateInTest {
         assertEquals(FetchMode.IMMEDIATE, test.get(a));
     }
 
-    public void testResolveDependency1() {
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A, FetchMode.IMMEDIATE);
-        ScriptResource b = graph.addResource(B, FetchMode.ON_LOAD);
+    public void testResolveDependency1() throws InvalidResourceException {
         try {
-            a.addDependency(B);
-            fail();
-        } catch (IllegalStateException ex) {
+            ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                    addDep(immediate(A), B),
+                    onLoad(B)
+            ));
+            fail("InvalidResourceException expected");
+        } catch (InvalidResourceException expected) {
         }
+
+        ScriptGraph graph = ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                immediate(A),
+                onLoad(B)
+        ));
+
+        ScriptResource a = graph.getResource(A);
+        ScriptResource b = graph.getResource(B);
 
         //
         LinkedHashMap<ResourceId, FetchMode> pairs = new LinkedHashMap<ResourceId, FetchMode>();
@@ -233,15 +319,23 @@ public class TestScriptGraph extends AbstractGateInTest {
         assertEquals(FetchMode.ON_LOAD, test.get(b));
     }
 
-    public void testResolveDependency2() {
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A, FetchMode.ON_LOAD);
-        ScriptResource b = graph.addResource(B, FetchMode.IMMEDIATE);
+    public void testResolveDependency2() throws InvalidResourceException {
         try {
-            a.addDependency(B);
-            fail();
-        } catch (IllegalStateException ex) {
+            ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                    addDep(onLoad(A), B),
+                    immediate(B)
+            ));
+            fail("InvalidResourceException expected");
+        } catch (InvalidResourceException expected) {
         }
+
+        ScriptGraph graph = ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                onLoad(A),
+                immediate(B)
+        ));
+
+        ScriptResource a = graph.getResource(A);
+        ScriptResource b = graph.getResource(B);
 
         //
         LinkedHashMap<ResourceId, FetchMode> pairs = new LinkedHashMap<ResourceId, FetchMode>();
@@ -280,12 +374,12 @@ public class TestScriptGraph extends AbstractGateInTest {
         assertEquals(FetchMode.IMMEDIATE, test.get(b));
     }
 
-    public void testResolveDisjointDependencies() {
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A, FetchMode.IMMEDIATE);
-        ScriptResource b = graph.addResource(B, FetchMode.IMMEDIATE);
-        ScriptResource c = graph.addResource(C, FetchMode.IMMEDIATE);
-        a.addDependency(C);
+    public void testResolveDisjointDependencies() throws InvalidResourceException {
+        ScriptGraph graph = ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                addDep(immediate(A), C),
+                immediate(B),
+                immediate(C)
+        ));
 
         // Yes all permutations
         ResourceId[][] samples = { { A }, { A, B }, { B, A }, { A, B, C }, { A, C, B }, { B, A, C }, { B, C, A }, { C, A, B },
@@ -305,50 +399,79 @@ public class TestScriptGraph extends AbstractGateInTest {
 
     public void testCrossDependency() {
         // Scripts and Module can't depend on each other
-        ScriptGraph graph = new ScriptGraph();
-        ScriptResource a = graph.addResource(A, FetchMode.IMMEDIATE);
-        graph.addResource(B, FetchMode.ON_LOAD);
         try {
-            a.addDependency(B);
-            fail();
-        } catch (IllegalStateException ignore) {
+            ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                    addDep(immediate(A), B),
+                    onLoad(B)
+            ));
+            fail("InvalidResourceException expected");
+        } catch (InvalidResourceException expected) {
         }
 
-        graph = new ScriptGraph();
-        a = graph.addResource(A, FetchMode.ON_LOAD);
-        a.addDependency(B);
         try {
-            graph.addResource(B, FetchMode.IMMEDIATE);
-            fail();
-        } catch (IllegalStateException ignore) {
+            ScriptGraph.empty().add(CONTEXT_PATH_1, Arrays.asList(
+                    addDep(onLoad(A), B),
+                    immediate(B)
+            ));
+            fail("InvalidResourceException expected");
+        } catch (InvalidResourceException expected) {
         }
+
     }
 
-    public void testDuplicateResource() {
-        ScriptGraph graph = new ScriptGraph();
+    public void testDuplicateResource() throws InvalidResourceException {
+        ScriptGraph graph = ScriptGraph.empty();
         ResourceId shared = new ResourceId(ResourceScope.SHARED, "foo");
 
-        graph.addResource(shared);
+        graph = graph.add(CONTEXT_PATH_1, Arrays.asList(immediate(shared)));
         try {
-            graph.addResource(shared);
-            fail();
-        } catch (IllegalStateException ignore) {
+            graph.add(CONTEXT_PATH_1, Arrays.asList(immediate(shared)));
+            fail("DuplicateResourceKeyException expected");
+        } catch (DuplicateResourceKeyException expected) {
         }
 
         ResourceId portlet = new ResourceId(ResourceScope.PORTLET, "foo");
-        graph.addResource(portlet);
+        graph = graph.add(CONTEXT_PATH_1, Arrays.asList(immediate(portlet)));
         try {
-            graph.addResource(portlet);
-            fail();
-        } catch (IllegalStateException ignore) {
+            graph.add(CONTEXT_PATH_1, Arrays.asList(immediate(portlet)));
+            fail("DuplicateResourceKeyException expected");
+        } catch (DuplicateResourceKeyException expected) {
         }
 
         ResourceId portal = new ResourceId(ResourceScope.PORTAL, "foo");
-        graph.addResource(portal);
+        graph = graph.add(CONTEXT_PATH_1, Arrays.asList(immediate(portal)));
         try {
-            graph.addResource(portal);
-            fail();
-        } catch (IllegalStateException ignore) {
+            graph.add(CONTEXT_PATH_1, Arrays.asList(immediate(portal)));
+            fail("DuplicateResourceKeyException expected");
+        } catch (DuplicateResourceKeyException expected) {
+        }
+    }
+
+    /**
+     * Similar to {@link #testDuplicateResource()}.
+     */
+    public void testAddDuplicate() throws InvalidResourceException {
+        ScriptGraph initial = ScriptGraph.empty();
+
+        for (ResourceScope scope : ResourceScope.values()) {
+            ResourceId id = id(scope);
+            initial = initial.add(CONTEXT_PATH_1, Arrays.asList(immediate(id)));
+        }
+
+        for (ResourceScope scope : ResourceScope.values()) {
+            ResourceId id = id(scope);
+            try {
+                initial.add(CONTEXT_PATH_1, Arrays.asList(immediate(id)));
+                fail("DuplicateResourceKeyException expected");
+            } catch (DuplicateResourceKeyException expected) {
+            }
+
+            /* no change in initial */
+            Collection<ScriptResource> scopeValues = initial.getResources(scope);
+            assertEquals(1, scopeValues.size());
+
+            ScriptResource found = initial.getResource(id);
+            assertEquals(id, found.getId());
         }
     }
 
@@ -362,8 +485,8 @@ public class TestScriptGraph extends AbstractGateInTest {
         for (int i = 0; i < array.length; i++) {
             ScriptResource resource = array[i];
             for (int j = i + 1; j < array.length; j++) {
-                if (resource.closure.contains(array[j].getId()) && resource.fetchMode.equals(array[j].fetchMode)) {
-                    throw failure("Was not expecting result order " + test, new Exception());
+                if (resource.getClosure().contains(array[j].getId()) && resource.getFetchMode().equals(array[j].getFetchMode())) {
+                    failure("Was not expecting result order " + test, new Exception());
                 }
             }
         }

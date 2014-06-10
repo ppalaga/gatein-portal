@@ -19,6 +19,7 @@
 
 package org.gatein.portal.controller.resource.script;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -29,27 +30,69 @@ import org.exoplatform.web.controller.QualifiedName;
 import org.gatein.portal.controller.resource.Resource;
 import org.gatein.portal.controller.resource.ResourceId;
 import org.gatein.portal.controller.resource.ResourceRequestHandler;
+import org.gatein.portal.controller.resource.ResourceScope;
+import org.gatein.portal.controller.resource.script.ScriptGraph.ScriptGraphBuilder;
 
 /**
  * @author <a href="mailto:phuong.vu@exoplatform.com">Vu Viet Phuong</a>
+ * @author <a href="mailto:ppalaga@redhat.com>Peter Palaga</a>
  */
-public class BaseScriptResource<R extends Resource<R>> extends Resource<R> {
+public abstract class BaseScriptResource<R extends Resource<R>> extends Resource<R> {
+
+    public static class BaseScriptResourceBuilder<R extends Resource<R>> {
+        protected ScriptGraphBuilder scriptGraphBuilder;
+        protected ResourceId id;
+        protected Map<QualifiedName, String> parameters;
+        protected Map<Locale, Map<QualifiedName, String>> parametersMap;
+        protected Map<QualifiedName, String> minParameters;
+        protected Map<Locale, Map<QualifiedName, String>> minParametersMap;
+
+        public BaseScriptResourceBuilder(ResourceId id, ScriptGraphBuilder scriptGraphBuilder) {
+            super();
+            this.id = id;
+            this.scriptGraphBuilder = scriptGraphBuilder;
+
+            //
+            Map<QualifiedName, String> parameters = createBaseParameters(id.getScope(), id.getName());
+
+            //
+            Map<QualifiedName, String> minifiedParameters = new HashMap<QualifiedName, String>(parameters);
+            minifiedParameters.put(ResourceRequestHandler.COMPRESS_QN, "min");
+
+            //
+            this.parameters = parameters;
+            this.minParameters = minifiedParameters;
+            this.parametersMap = new HashMap<Locale, Map<QualifiedName, String>>();
+            this.minParametersMap = new HashMap<Locale, Map<QualifiedName, String>>();
+        }
+
+        void addSupportedLocale(Locale locale) {
+            if (!parametersMap.containsKey(locale)) {
+                Map<QualifiedName, String> localizedParameters = new HashMap<QualifiedName, String>(parameters);
+                localizedParameters.put(ResourceRequestHandler.LANG_QN, I18N.toTagIdentifier(locale));
+                parametersMap.put(locale, localizedParameters);
+                Map<QualifiedName, String> localizedMinParameters = new HashMap<QualifiedName, String>(minParameters);
+                localizedMinParameters.put(ResourceRequestHandler.LANG_QN, I18N.toTagIdentifier(locale));
+                minParametersMap.put(locale, localizedMinParameters);
+            }
+        }
+
+    }
 
     /**
      * This is quite closely tied to what is set in {@code controller.xml}.
      * @return
      */
-    public static Map<QualifiedName, String> createBaseParameters() {
+    public static Map<QualifiedName, String> createBaseParameters(ResourceScope scope, String resourceName) {
         Map<QualifiedName, String> parameters = new HashMap<QualifiedName, String>();
         parameters.put(WebAppController.HANDLER_PARAM, ResourceRequestHandler.SCRIPT_HANDLER_NAME);
         parameters.put(ResourceRequestHandler.COMPRESS_QN, "");
         parameters.put(ResourceRequestHandler.VERSION_QN, ResourceRequestHandler.VERSION);
         parameters.put(ResourceRequestHandler.LANG_QN, "");
+        parameters.put(ResourceRequestHandler.RESOURCE_QN, resourceName);
+        parameters.put(ResourceRequestHandler.SCOPE_QN, scope.name());
         return parameters;
     }
-
-    /** . */
-    ScriptGraph graph;
 
     /** . */
     private final Map<QualifiedName, String> parameters;
@@ -63,24 +106,14 @@ public class BaseScriptResource<R extends Resource<R>> extends Resource<R> {
     /** . */
     private final Map<Locale, Map<QualifiedName, String>> minParametersMap;
 
-    BaseScriptResource(ScriptGraph graph, ResourceId id) {
+    protected BaseScriptResource(ResourceId id, Map<QualifiedName, String> parameters,
+            Map<Locale, Map<QualifiedName, String>> parametersMap, Map<QualifiedName, String> minParameters,
+            Map<Locale, Map<QualifiedName, String>> minParametersMap) {
         super(id);
-
-        //
-        Map<QualifiedName, String> parameters = createBaseParameters();
-        parameters.put(ResourceRequestHandler.RESOURCE_QN, id.getName());
-        parameters.put(ResourceRequestHandler.SCOPE_QN, id.getScope().name());
-
-        //
-        Map<QualifiedName, String> minifiedParameters = new HashMap<QualifiedName, String>(parameters);
-        minifiedParameters.put(ResourceRequestHandler.COMPRESS_QN, "min");
-
-        //
-        this.parameters = parameters;
-        this.minParameters = minifiedParameters;
-        this.graph = graph;
-        this.parametersMap = new HashMap<Locale, Map<QualifiedName, String>>();
-        this.minParametersMap = new HashMap<Locale, Map<QualifiedName, String>>();
+        this.parameters = Collections.unmodifiableMap(new HashMap<QualifiedName, String>(parameters));
+        this.parametersMap = Collections.unmodifiableMap(new HashMap<Locale, Map<QualifiedName, String>>(parametersMap));
+        this.minParameters = Collections.unmodifiableMap(new HashMap<QualifiedName, String>(minParameters));
+        this.minParametersMap = Collections.unmodifiableMap(new HashMap<Locale, Map<QualifiedName, String>>(minParametersMap));
     }
 
     public Map<QualifiedName, String> getParameters(boolean minified, Locale locale) {
@@ -94,14 +127,4 @@ public class BaseScriptResource<R extends Resource<R>> extends Resource<R> {
         return minified ? minParameters : parameters;
     }
 
-    public void addSupportedLocale(Locale locale) {
-        if (!parametersMap.containsKey(locale)) {
-            Map<QualifiedName, String> localizedParameters = new HashMap<QualifiedName, String>(parameters);
-            localizedParameters.put(ResourceRequestHandler.LANG_QN, I18N.toTagIdentifier(locale));
-            parametersMap.put(locale, localizedParameters);
-            Map<QualifiedName, String> localizedMinParameters = new HashMap<QualifiedName, String>(minParameters);
-            localizedMinParameters.put(ResourceRequestHandler.LANG_QN, I18N.toTagIdentifier(locale));
-            minParametersMap.put(locale, localizedMinParameters);
-        }
-    }
 }
