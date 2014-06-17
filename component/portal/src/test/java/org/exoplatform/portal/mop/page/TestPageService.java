@@ -288,7 +288,7 @@ public class TestPageService extends AbstractTestPageService {
     }
 
     public void testFindOrder() throws Exception {
-        Page pages = mgr.getPOMService().getModel().getWorkspace().addSite(ObjectType.PORTAL_SITE, "find_pages").getRootPage()
+        Page pages = mgr.getPOMService().getModel().getWorkspace().addSite(ObjectType.PORTAL_SITE, "find_pages_order").getRootPage()
                 .addChild("pages");
         pages.addChild("page01").adapt(Described.class).setName("page01");
         pages.addChild("page02").adapt(Described.class).setName("page02");
@@ -304,25 +304,25 @@ public class TestPageService extends AbstractTestPageService {
         pages.addChild("page12").adapt(Described.class).setName("page12");
         sync(true);
 
-        QueryResult<PageContext> result = service.findPages(0, 10, SiteType.PORTAL, "find_pages", null, null);
+        QueryResult<PageContext> result = service.findPages(0, 10, SiteType.PORTAL, "find_pages_order", null, null);
         Iterator<PageContext> iterator = result.iterator();
 
-        assertEquals("portal::find_pages::page01", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page02", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page03", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page04", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page05", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page06", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page07", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page08", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page09", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page10", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page01", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page02", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page03", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page04", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page05", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page06", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page07", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page08", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page09", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page10", iterator.next().getKey().format());
 
-        result = service.findPages(10, 12, SiteType.PORTAL, "find_pages", null, null);
+        result = service.findPages(10, 12, SiteType.PORTAL, "find_pages_order", null, null);
         iterator = result.iterator();
 
-        assertEquals("portal::find_pages::page11", iterator.next().getKey().format());
-        assertEquals("portal::find_pages::page12", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page11", iterator.next().getKey().format());
+        assertEquals("portal::find_pages_order::page12", iterator.next().getKey().format());
     }
 
     public void testClone() throws Exception {
