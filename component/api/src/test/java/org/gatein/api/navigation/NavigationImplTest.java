@@ -174,9 +174,78 @@ public class NavigationImplTest extends AbstractApiTest {
         Node saved = navigation.getRootNode(Nodes.visitAll());
 
         assertEquals("simple", saved.getChild("simple").getDisplayName());
+
         assertNotNull(saved.getChild("extended").getDisplayNames());
         assertEquals("english", saved.getChild("extended").getDisplayNames().getLocalizedValue(Locale.ENGLISH).getValue());
         assertEquals("chinese", saved.getChild("extended").getDisplayNames().getLocalizedValue(Locale.CHINA).getValue());
+    }
+
+    @Test
+    public void displayNames_expression() throws Exception {
+        Node node = navigation.getRootNode(Nodes.visitAll());
+        /* first test with portal that has languages defined, bundles exist and the key is defined in those bundles */
+        node.addChild("myTestKeyNode").setDisplayName("#{my.test.key}");
+        /* second, test with portal that has languages defined, bundles exist but the key is not defined in those bundles */
+        node.addChild("myMissingKeyNode").setDisplayName("#{my.missing.key}");
+        navigation.saveNode(node);
+
+        Node saved = navigation.getRootNode(Nodes.visitAll());
+        Node myTestKeyNode = saved.getChild("myTestKeyNode");
+        assertEquals("My English value", myTestKeyNode.getDisplayName());
+        assertEquals(4, myTestKeyNode.getDisplayNames().getLocalizedValues().size());
+        assertEquals("My English value", myTestKeyNode.getDisplayNames().getLocalizedValue(Locale.ENGLISH).getValue());
+        assertEquals("My French value", myTestKeyNode.getDisplayNames().getLocalizedValue(Locale.FRENCH).getValue());
+        assertEquals("My Arabic value", myTestKeyNode.getDisplayNames().getLocalizedValue(new Locale("ar")).getValue());
+        assertEquals("My Vietnamese value", myTestKeyNode.getDisplayNames().getLocalizedValue(new Locale("vi")).getValue());
+
+        /* change the displayNames LocalizedString */
+        LocalizedString newDisplayNames = myTestKeyNode.getDisplayNames();
+        newDisplayNames.setLocalizedValue(Locale.GERMAN, "My new German value");
+        newDisplayNames.setLocalizedValue(Locale.ENGLISH, "My new English value");
+
+        myTestKeyNode.setDisplayNames(newDisplayNames);
+        navigation.saveNode(myTestKeyNode);
+        saved = navigation.getRootNode(Nodes.visitAll());
+        myTestKeyNode = saved.getChild("myTestKeyNode");
+        assertEquals("My new English value", myTestKeyNode.getDisplayName());
+        assertEquals(5, myTestKeyNode.getDisplayNames().getLocalizedValues().size());
+        assertEquals("My new English value", myTestKeyNode.getDisplayNames().getLocalizedValue(Locale.ENGLISH).getValue());
+        assertEquals("My French value", myTestKeyNode.getDisplayNames().getLocalizedValue(Locale.FRENCH).getValue());
+        assertEquals("My Arabic value", myTestKeyNode.getDisplayNames().getLocalizedValue(new Locale("ar")).getValue());
+        assertEquals("My Vietnamese value", myTestKeyNode.getDisplayNames().getLocalizedValue(new Locale("vi")).getValue());
+        assertEquals("My new German value", myTestKeyNode.getDisplayNames().getLocalizedValue(Locale.GERMAN).getValue());
+
+        /* set back to the expression */
+        myTestKeyNode.setDisplayName("#{my.test.key}");
+        navigation.saveNode(myTestKeyNode);
+        saved = navigation.getRootNode(Nodes.visitAll());
+        myTestKeyNode = saved.getChild("myTestKeyNode");
+        assertEquals("My English value", myTestKeyNode.getDisplayName());
+        assertEquals(4, myTestKeyNode.getDisplayNames().getLocalizedValues().size());
+        assertEquals("My English value", myTestKeyNode.getDisplayNames().getLocalizedValue(Locale.ENGLISH).getValue());
+        assertEquals("My French value", myTestKeyNode.getDisplayNames().getLocalizedValue(Locale.FRENCH).getValue());
+        assertEquals("My Arabic value", myTestKeyNode.getDisplayNames().getLocalizedValue(new Locale("ar")).getValue());
+        assertEquals("My Vietnamese value", myTestKeyNode.getDisplayNames().getLocalizedValue(new Locale("vi")).getValue());
+
+        Node myMissingKeyNode = saved.getChild("myMissingKeyNode");
+        assertEquals("#{my.missing.key}", myMissingKeyNode.getDisplayName());
+        assertEquals(1, myMissingKeyNode.getDisplayNames().getLocalizedValues().size());
+        assertEquals("#{my.missing.key}", myMissingKeyNode.getDisplayNames().getLocalizedValue(null).getValue());
+
+        /* third, test with portal that has no languages defined and bundles do not exist */
+        SiteId siteId = new SiteId("displayNames_expression");
+        createSite(siteId);
+        Navigation nav = portal.getNavigation(siteId);
+        node = nav.getRootNode(Nodes.visitAll());
+        node.addChild("myMissingBundleNode").setDisplayName("#{my.missing.bundle.key}");
+        nav.saveNode(node);
+        saved = nav.getRootNode(Nodes.visitAll());
+        Node myMissingBundleNode = saved.getChild("myMissingBundleNode");
+        assertEquals("#{my.missing.bundle.key}", myMissingBundleNode.getDisplayName());
+        assertEquals(1, myMissingBundleNode.getDisplayNames().getLocalizedValues().size());
+        assertEquals("#{my.missing.bundle.key}", myMissingBundleNode.getDisplayNames().getLocalizedValue(null).getValue());
+
+        portal.removeSite(siteId);
     }
 
     @Test

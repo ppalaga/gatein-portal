@@ -46,6 +46,7 @@ import org.exoplatform.portal.mop.page.PageState;
 import org.exoplatform.portal.pom.spi.gadget.Gadget;
 import org.exoplatform.portal.pom.spi.portlet.Portlet;
 import org.exoplatform.portal.pom.spi.wsrp.WSRP;
+import org.exoplatform.services.resources.LocaleConfigService;
 import org.exoplatform.services.resources.ResourceBundleManager;
 import org.exoplatform.services.security.Authenticator;
 import org.exoplatform.services.security.Identity;
@@ -111,6 +112,8 @@ public class PortalImpl implements Portal {
     private final NavigationService navigationService;
     private final DescriptionService descriptionService;
     private final ResourceBundleManager bundleManager;
+    private final LocaleConfigService localeConfigService;
+
     private final UserACL acl;
     private final Authenticator authenticator;
     private final IdentityRegistry identityRegistry;
@@ -119,7 +122,8 @@ public class PortalImpl implements Portal {
     private ApplicationRegistry applicationRegistry;
 
     public PortalImpl(DataStorage dataStorage, PageService pageService, NavigationService navigationService,
-                      DescriptionService descriptionService, ResourceBundleManager bundleManager, Authenticator authenticator,
+                      DescriptionService descriptionService, ResourceBundleManager bundleManager,
+                      LocaleConfigService localeConfigService, Authenticator authenticator,
                       IdentityRegistry identityRegistry, UserACL acl, UserPortalConfigService userPortalConfigService,
                       OAuthProviderAccessor oauthProviderAccessor) {
         this.dataStorage = dataStorage;
@@ -127,6 +131,7 @@ public class PortalImpl implements Portal {
         this.navigationService = navigationService;
         this.descriptionService = descriptionService;
         this.bundleManager = bundleManager;
+        this.localeConfigService = localeConfigService;
         this.authenticator = authenticator;
         this.identityRegistry = identityRegistry;
         this.acl = acl;
@@ -264,7 +269,7 @@ public class PortalImpl implements Portal {
             NavigationContext ctx = navigationService.loadNavigation(Util.from(siteId));
             if (ctx == null) return null;
 
-            return new NavigationImpl(siteId, navigationService, ctx, descriptionService, bundleManager);
+            return new NavigationImpl(siteId, navigationService, ctx, descriptionService, bundleManager, localeConfigService);
         } catch (Throwable t) {
             throw new ApiException("Failed to load navigation", t);
         }

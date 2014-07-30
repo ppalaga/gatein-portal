@@ -31,13 +31,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import org.exoplatform.commons.utils.ExpressionUtil;
+import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.portal.mop.Described;
 import org.exoplatform.portal.mop.navigation.NodeChange;
 import org.exoplatform.portal.mop.navigation.NodeContext;
 import org.exoplatform.portal.mop.navigation.NodeState;
 import org.exoplatform.portal.mop.navigation.NodeState.Builder;
+import org.exoplatform.services.resources.LocaleConfig;
+import org.exoplatform.services.resources.LocaleConfigService;
 import org.gatein.api.EntityAlreadyExistsException;
 import org.gatein.api.EntityNotFoundException;
 import org.gatein.api.Portal;
@@ -50,6 +55,7 @@ import org.gatein.api.internal.Parameters;
 import org.gatein.api.navigation.Visibility.Status;
 import org.gatein.api.page.PageId;
 import org.gatein.api.site.SiteId;
+import org.gatein.api.site.SiteType;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
@@ -169,7 +175,7 @@ public class ApiNode implements Node {
         if (displayName == null) {
             String simple = context.getState().getLabel();
             if (simple != null) {
-                displayName = new LocalizedString(simple);
+                displayName = navigation.resolveExpression(simple);
             } else if (context.getId() != null) {
                 Map<Locale, Described.State> descriptions = navigation.loadDescriptions(context.getId());
                 displayName = ObjectFactory.createLocalizedString(descriptions);
@@ -177,6 +183,7 @@ public class ApiNode implements Node {
         }
         return displayName;
     }
+
 
     @Override
     public String getName() {
@@ -316,7 +323,8 @@ public class ApiNode implements Node {
         checkChildrenLoaded();
 
         if (!hasChild(childName)) {
-            throw new EntityNotFoundException("Cannot remove child '" + childName + "' because it does not exist for parent node " + getNodePath());
+            throw new EntityNotFoundException("Cannot remove child '" + childName
+                    + "' because it does not exist for parent node " + getNodePath());
         }
 
         return context.removeNode(childName);

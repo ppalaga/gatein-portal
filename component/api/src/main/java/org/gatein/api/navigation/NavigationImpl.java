@@ -23,10 +23,13 @@ package org.gatein.api.navigation;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
+import org.exoplatform.commons.utils.ExpressionUtil;
+import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.portal.mop.Described;
 import org.exoplatform.portal.mop.Described.State;
-import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.description.DescriptionService;
 import org.exoplatform.portal.mop.navigation.NavigationContext;
 import org.exoplatform.portal.mop.navigation.NavigationService;
@@ -34,14 +37,17 @@ import org.exoplatform.portal.mop.navigation.NavigationState;
 import org.exoplatform.portal.mop.navigation.NodeChangeListener;
 import org.exoplatform.portal.mop.navigation.NodeContext;
 import org.exoplatform.portal.mop.navigation.Scope;
+import org.exoplatform.services.resources.LocaleConfig;
+import org.exoplatform.services.resources.LocaleConfigService;
 import org.exoplatform.services.resources.ResourceBundleManager;
 import org.gatein.api.ApiException;
-import org.gatein.api.EntityNotFoundException;
 import org.gatein.api.PortalRequest;
 import org.gatein.api.Util;
+import org.gatein.api.common.i18n.LocalizedString;
 import org.gatein.api.internal.Parameters;
 import org.gatein.api.site.Site;
 import org.gatein.api.site.SiteId;
+import org.gatein.api.site.SiteType;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
@@ -52,6 +58,7 @@ public class NavigationImpl implements Navigation {
     private final NavigationContext navCtx;
     private final DescriptionService descriptionService;
     private final ResourceBundleManager bundleManager;
+    private final LocaleConfigService localeConfigService;
 
     private final SiteId siteId;
     private final ApiNodeModel model;
@@ -59,12 +66,13 @@ public class NavigationImpl implements Navigation {
     private Navigation18NResolver i18nResolver;
 
     public NavigationImpl(SiteId siteId, NavigationService navigationService, NavigationContext navCtx, DescriptionService descriptionService,
-            ResourceBundleManager bundleManager) {
+            ResourceBundleManager bundleManager, LocaleConfigService localeConfigService) {
         this.siteId = siteId;
         this.navigationService = navigationService;
         this.navCtx = navCtx;
         this.descriptionService = descriptionService;
         this.bundleManager = bundleManager;
+        this.localeConfigService = localeConfigService;
         this.model = new ApiNodeModel(this);
     }
 
@@ -75,6 +83,7 @@ public class NavigationImpl implements Navigation {
         this.navCtx = null;
         this.descriptionService = null;
         this.bundleManager = null;
+        this.localeConfigService = null;
         this.model = null;
     }
 
@@ -195,6 +204,52 @@ public class NavigationImpl implements Navigation {
         }
 
         return i18nResolver.resolveName(ctx.getState().getLabel(), ctx.getId(), ctx.getName());
+    }
+
+    /**
+     * Resolves the given WebUI style i18n place holder. Under the hood a similar thing happens in
+     * {@link NavigationImpl#resolve(NodeContext)}.
+     * <p>
+     * In particuler, it checks whether {@code expression} is a WebUI style i18n place holder of form
+     * <code>#{resource.bundle.key}</code>. In case it is, it iterates over {@link LocaleConfigService#getLocalConfigs()} and
+     * resolves the key against each available {@link LocaleConfig#getNavigationResourceBundle(String, String)}. The resolved
+     * values are stored in a new {@link LocalizedString} and returned.
+     * <p>
+     * If {@code expression} is not a WebUI style i18n place holder or if the resoltion does not succed for any locale,
+     * {@code new LocalizedString(expression) is returned.}
+     *
+     * @param expression possibly a WebUI style i18n place holder
+     * @return
+     */
+    LocalizedString resolveExpression(String expression) {
+        LocalizedString result = null;
+        if (ExpressionUtil.isResourceBindingExpression(expression)) {
+            String key = expression.substring(2, expression.length() - 1);
+            String ownerId = siteId.getName();
+            if (siteId.getType() == SiteType.SPACE) {
+                /* Remove the initial '/' in a group name */
+                ownerId = ownerId.substring(1);
+            }
+            String siteOwnerType = Util.from(siteId).getTypeName();
+            for (LocaleConfig localeConfig : localeConfigService.getLocalConfigs()) {
+                Locale locale = localeConfig.getLocale();
+                ResourceBundle rb = localeConfig.getNavigationResourceBundle(siteOwnerType , ownerId);
+                if (rb != null) {
+                    try {
+                        String value = rb.getString(key);
+                        if (value != null) {
+                            if (result == null) {
+                                result = new LocalizedString(locale, value);
+                            } else {
+                                result.setLocalizedValue(locale, value);
+                            }
+                        }
+                    } catch (MissingResourceException e) {
+                    }
+                }
+            }
+        }
+        return result == null ? new LocalizedString(expression) : result;
     }
 
     NodeContext<ApiNode> getNodeContext(NodePath nodePath, NodeVisitor visitor) {
